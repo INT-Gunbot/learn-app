@@ -1,0 +1,20 @@
+{
+  "name": "学什么 · 自定义学习",
+  "short_name": "学什么",
+  "description": "按自己的需求搭建知识库，用间隔重复真正记住",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1116",
+  "theme_color": "#0E1116",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20512%20512'%3E%3Crect%20width='512'%20height='512'%20rx='112'%20fill='%235B8CFF'/%3E%3Ctext%20x='256'%20y='338'%20font-size='270'%20text-anchor='middle'%20fill='white'%20font-family='sans-serif'%3E%E5%AD%A6%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

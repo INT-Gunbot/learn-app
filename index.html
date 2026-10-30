@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0E1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="学什么">
+<title>学什么 · 自定义学习</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B8CFF'/%3E%3Ctext x='32' y='42' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif'%3E学%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">学习</h1>
+      <div class="sub" id="pageSub">今天也要进步一点点</div>
+    </div>
+    <div class="act">
+      <button class="iconbtn" id="btnSearch" title="搜索">🔍</button>
+      <button class="iconbtn" id="btnAdd" title="新增卡片">＋</button>
+    </div>
+  </header>
+
+  <main id="view">
+    <section id="page-home"></section>
+    <section id="page-path" class="hidden"></section>
+    <section id="page-lib" class="hidden"></section>
+    <section id="page-stats" class="hidden"></section>
+    <section id="page-me" class="hidden"></section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-page="home" class="on"><span class="ic">🏠</span>学习</button>
+    <button data-page="path"><span class="ic">🧭</span>路径</button>
+    <button data-page="lib"><span class="ic">📚</span>知识库</button>
+    <button data-page="stats"><span class="ic">📊</span>统计</button>
+    <button data-page="me"><span class="ic">⚙️</span>我的</button>
+  </nav>
+</div>
+
+<div id="studyRoot"></div>
+<div id="sheetRoot"></div>
+<input type="file" id="fileInput" class="fileinput" accept=".json,.md,.markdown,.txt,.csv,.tsv">
+
+<script src="assets/data-english.js"></script>
+<script src="assets/data-pm.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

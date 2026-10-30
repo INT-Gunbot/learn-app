@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0E1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="学什么">
+<title>学什么 · 自定义学习</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B8CFF'/%3E%3Ctext x='32' y='42' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif'%3E学%3C/text%3E%3C/svg%3E">
+<style>
+/* ===== 基础变量 ===== */
+:root {
+  --bg: #0E1116;
+  --bg-soft: #141922;
+  --surface: #171D27;
+  --surface-2: #1E2530;
+  --line: #262E3B;
+  --text: #E8ECF3;
+  --muted: #8B96A8;
+  --faint: #5C677A;
+  --accent: #5B8CFF;
+  --accent-2: #22C7A0;
+  --gold: #F5A524;
+  --bad: #FF6B6B;
+  --warn: #FFB020;
+  --ok: #22C7A0;
+  --radius: 16px;
+  --shadow: 0 8px 30px rgba(0, 0, 0, .35);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+}
+[data-theme="light"] {
+  --bg: #F4F6FA;
+  --bg-soft: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F1F4F9;
+  --line: #E3E8F0;
+  --text: #161C26;
+  --muted: #6B7688;
+  --faint: #98A2B3;
+  --shadow: 0 8px 24px rgba(20, 30, 50, .08);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  overscroll-behavior-y: none;
+}
+button { font-family: inherit; font-size: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+input, textarea, select { font-family: inherit; font-size: 16px; color: var(--text); }
+.hidden { display: none !important; }
+
+/* ===== 布局 ===== */
+#app { max-width: 520px; margin: 0 auto; min-height: 100%; position: relative; background: var(--bg); }
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  padding: 14px 16px 10px; background: var(--bg);
+  border-bottom: 1px solid transparent;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.topbar h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: .2px; }
+.topbar .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.topbar .act { display: flex; gap: 8px; }
+.iconbtn {
+  width: 36px; height: 36px; border-radius: 12px; background: var(--surface);
+  display: grid; place-items: center; font-size: 15px; color: var(--muted);
+  border: 1px solid var(--line);
+}
+main { padding: 6px 16px calc(96px + var(--safe-b)); animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ===== 底部导航 ===== */
+.tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  max-width: 520px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  padding-bottom: var(--safe-b);
+}
+.tabbar button {
+  padding: 9px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--faint); font-size: 11px;
+}
+.tabbar button .ic { font-size: 19px; line-height: 1; }
+.tabbar button.on { color: var(--accent); }
+.tabbar button.on .ic { transform: translateY(-1px); }
+
+/* ===== 通用组件 ===== */
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+}
+.row { display: flex; align-items: center; gap: 10px; }
+.between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.small { font-size: 12.5px; }
+.tiny { font-size: 11.5px; }
+.mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; }
+.center { text-align: center; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+  border-radius: 999px; font-size: 11px; background: var(--surface-2); color: var(--muted);
+  border: 1px solid var(--line);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 14px; border-radius: 12px; background: var(--surface-2);
+  border: 1px solid var(--line); font-size: 14px; font-weight: 500;
+}
+.btn:active { transform: scale(.98); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), #7AA2FF);
+  color: #fff; border: 0; font-weight: 600;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.btn.wide { width: 100%; }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--bad); }
+.btn:disabled { opacity: .45; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; padding: 7px 13px; border-radius: 999px; font-size: 13px;
+  background: var(--surface); border: 1px solid var(--line); color: var(--muted);
+}
+.chip.on { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s ease; }
+.search {
+  width: 100%; padding: 11px 14px; border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--line); outline: none; margin-bottom: 12px;
+}
+.search::placeholder { color: var(--faint); }
+.empty { padding: 42px 20px; text-align: center; color: var(--faint); }
+.empty .em { font-size: 34px; margin-bottom: 8px; }
+
+/* ===== 首页 ===== */
+.hero {
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 22%, var(--surface)), var(--surface) 62%);
+  border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin-bottom: 14px;
+}
+.hero .big { font-size: 26px; font-weight: 800; letter-spacing: .5px; }
+.hero .goal { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.rings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.ring { background: color-mix(in srgb, var(--bg) 45%, transparent); border-radius: 14px; padding: 10px 6px; text-align: center; }
+.ring .num { font-size: 20px; font-weight: 700; }
+.ring .lb { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.task {
+  display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px;
+}
+.task .t-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: var(--surface-2); }
+.task .grow { flex: 1; min-width: 0; }
+.task .t-title { font-weight: 600; font-size: 14.5px; }
+.task .t-sub { font-size: 12px; color: var(--muted); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-mini { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.stat-mini .n { font-size: 20px; font-weight: 700; }
+.stat-mini .l { font-size: 11.5px; color: var(--muted); }
+
+/* ===== 路径 ===== */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; position: relative; overflow: hidden; }
+.stage.done { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.stage .st-head { display: flex; align-items: center; justify-content: space-between; }
+.stage .st-name { font-weight: 700; font-size: 15px; }
+.stage .st-goal { font-size: 12.5px; color: var(--muted); margin: 4px 0 10px; }
+.stage .decks { display: flex; flex-direction: column; gap: 8px; }
+.deck-line { display: flex; align-items: center; gap: 10px; }
+.deck-line .nm { flex: 1; font-size: 13.5px; }
+.deck-line .pc { font-size: 12px; color: var(--muted); width: 42px; text-align: right; }
+.deck-line .bar { flex: none; width: 78px; }
+
+/* ===== 知识库 ===== */
+.lib-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 9px; }
+.lib-item .em { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #fff; }
+.lib-item .grow { flex: 1; min-width: 0; }
+.lib-item .nm { font-weight: 600; font-size: 14px; }
+.lib-item .ds { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kb-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px; }
+.kb-card .q { font-weight: 600; font-size: 14.5px; }
+.kb-card .a { font-size: 13px; color: var(--muted); margin-top: 5px; white-space: pre-wrap; }
+.kb-card .ex { font-size: 12.5px; color: var(--faint); margin-top: 6px; padding-left: 9px; border-left: 2px solid var(--line); }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot.m0 { background: var(--faint); } .dot.m1 { background: var(--bad); }
+.dot.m2 { background: var(--warn); } .dot.m3 { background: var(--ok); }
+
+/* ===== 学习会话 ===== */
+.study {
+  position: fixed; inset: 0; z-index: 60; background: var(--bg);
+  display: flex; flex-direction: column; max-width: 520px; margin: 0 auto;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(16px + var(--safe-b));
+  animation: rise .28s ease;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.study-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.study-top .bar { flex: 1; }
+.stage-pill { font-size: 11.5px; color: var(--muted); }
+.flipwrap { flex: 1; display: flex; flex-direction: column; }
+.flip { flex: 1; perspective: 1400px; }
+.flip-inner {
+  position: relative; width: 100%; height: 100%; transition: transform .45s cubic-bezier(.4,.1,.2,1);
+  transform-style: preserve-3d; cursor: pointer;
+}
+.flip.show .flip-inner { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  padding: 22px; display: flex; flex-direction: column; justify-content: center;
+  overflow-y: auto;
+}
+.face.back { transform: rotateY(180deg); background: var(--surface-2); }
+.face .label { font-size: 11px; letter-spacing: 1px; color: var(--faint); text-transform: uppercase; }
+.face .front-text { font-size: 22px; font-weight: 700; line-height: 1.35; margin-top: 10px; }
+.face .back-text { font-size: 16px; line-height: 1.7; margin-top: 8px; white-space: pre-wrap; }
+.face .ex-text { font-size: 13.5px; color: var(--muted); margin-top: 12px; padding-left: 10px; border-left: 2px solid var(--accent); white-space: pre-wrap; }
+.face .tap-hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 11.5px; color: var(--faint); }
+.grades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.grade { padding: 13px 6px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); text-align: center; font-size: 13px; }
+.grade .g-em { display: block; font-size: 17px; }
+.grade.g0 { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
+.grade.g1 { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+.grade.g2 { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
+.grade small { display: block; font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+.grades.hide { visibility: hidden; }
+.done-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.done-em { font-size: 52px; }
+.done-wrap h2 { margin: 10px 0 4px; font-size: 22px; }
+.done-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 20px 0; }
+
+/* ===== 统计 ===== */
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; overflow-x: auto; padding: 2px 0; }
+.heat i { width: 12px; height: 12px; border-radius: 3px; background: var(--surface-2); display: block; }
+.heat i.l1 { background: color-mix(in srgb, var(--accent) 28%, var(--surface-2)); }
+.heat i.l2 { background: color-mix(in srgb, var(--accent) 55%, var(--surface-2)); }
+.heat i.l3 { background: var(--accent); }
+.heat i.l4 { background: var(--accent-2); }
+.chart { display: flex; align-items: flex-end; gap: 5px; height: 108px; margin-top: 10px; }
+.chart .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+.chart .col i { width: 100%; max-width: 20px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent)); min-height: 3px; }
+.chart .col span { font-size: 9.5px; color: var(--faint); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+.legend b { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.seg { display: flex; gap: 6px; }
+.seg button { flex: 1; padding: 8px; border-radius: 10px; background: var(--surface-2); font-size: 12.5px; border: 1px solid var(--line); color: var(--muted); }
+.seg button.on { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+
+/* ===== 弹层 ===== */
+.sheet-mask { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s; }
+.sheet {
+  width: 100%; max-width: 520px; background: var(--bg-soft); border-radius: 20px 20px 0 0;
+  padding: 16px 16px calc(20px + var(--safe-b)); max-height: 88vh; overflow-y: auto;
+  animation: up .26s cubic-bezier(.3,.1,.2,1);
+}
+@keyframes up { from { transform: translateY(100%); } to { transform: none; } }
+.sheet h3 { margin: 0 0 12px; font-size: 17px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 11px 12px; border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--line); outline: none; resize: vertical;
+}
+.field textarea { min-height: 84px; line-height: 1.6; font-size: 15px; }
+.sheet .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + var(--safe-b));
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+  padding: 10px 16px; border-radius: 999px; font-size: 13px; z-index: 90; box-shadow: var(--shadow);
+  animation: up .2s;
+}
+.fileinput { display: none; }
+.list-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.list-row:last-child { border-bottom: 0; }
+.stepper { display: flex; align-items: center; gap: 12px; }
+.stepper button { width: 30px; height: 30px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-size: 16px; }
+.stepper .v { min-width: 30px; text-align: center; font-weight: 600; }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">学习</h1>
+      <div class="sub" id="pageSub">今天也要进步一点点</div>
+    </div>
+    <div class="act">
+      <button class="iconbtn" id="btnSearch" title="搜索">🔍</button>
+      <button class="iconbtn" id="btnAdd" title="新增卡片">＋</button>
+    </div>
+  </header>
+
+  <main id="view">
+    <section id="page-home"></section>
+    <section id="page-path" class="hidden"></section>
+    <section id="page-lib" class="hidden"></section>
+    <section id="page-stats" class="hidden"></section>
+    <section id="page-me" class="hidden"></section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-page="home" class="on"><span class="ic">🏠</span>学习</button>
+    <button data-page="path"><span class="ic">🧭</span>路径</button>
+    <button data-page="lib"><span class="ic">📚</span>知识库</button>
+    <button data-page="stats"><span class="ic">📊</span>统计</button>
+    <button data-page="me"><span class="ic">⚙️</span>我的</button>
+  </nav>
+</div>
+
+<div id="studyRoot"></div>
+<div id="sheetRoot"></div>
+<input type="file" id="fileInput" class="fileinput" accept=".json,.md,.markdown,.txt,.csv,.tsv">
+
+<script>
+/* 内置知识库：英语（职场 / 产品经理场景导向）
+ * card: { f: 正面（词语或问题）, b: 背面（释义与要点）, t: 例句或补充 }
+ */
+window.KB_ENGLISH = {
+  id: "english",
+  name: "英语",
+  subtitle: "职场与产品场景英语",
+  icon: "EN",
+  accent: "#5B8CFF",
+  decks: [
+    {
+      id: "en-vocab",
+      name: "高频核心词汇",
+      desc: "外企 / 跨境团队邮件与会议里真正高频的 30 个词",
+      cards: [
+        { f: "leverage", b: "v. 利用、撬动（资源、优势以放大结果）。比 use 更强调「以小博大」。搭配：leverage A to do B。", t: "We leveraged existing user data to train the recommendation model." },
+        { f: "prioritize", b: "v. 排定优先顺序；n. priority 优先级。搭配：prioritize A over B。", t: "We need to prioritize retention over acquisition this quarter." },
+        { f: "align / alignment", b: "v. 对齐；n. 一致性。搭配：align A with B；get everyone aligned on + 目标。", t: "Let us align on the success metric before we start building." },
+        { f: "scope", b: "n. 范围；v. 界定范围。in / out of scope 表示纳入或排除；scope creep 指范围蔓延。", t: "Push notifications are out of scope for version one." },
+        { f: "trade-off", b: "n. 权衡取舍。指无法同时最优时明确的取舍，必须说清放弃了什么。搭配：a trade-off between A and B。", t: "There is a trade-off between response speed and accuracy." },
+        { f: "bottleneck", b: "n. 瓶颈，限制整体效率的关键环节。搭配：identify / remove a bottleneck。", t: "Manual review is the bottleneck in our content pipeline." },
+        { f: "stakeholder", b: "n. 利益相关方，会影响项目或被项目影响的人。key stakeholders 指核心相关方。", t: "Keep all stakeholders in the loop before the launch." },
+        { f: "deliverable", b: "n. 交付物，项目承诺产出的具体成果（文档、功能、报告）。", t: "The deliverables for this sprint are the PRD and the clickable prototype." },
+        { f: "milestone", b: "n. 里程碑，标志阶段完成的关键节点，用于进度管理与向上汇报。", t: "The beta release is our next major milestone." },
+        { f: "iterate / iteration", b: "v. 迭代；n. 一次迭代。指小步快跑、基于反馈持续改进，而非一次做完美。", t: "We will iterate on the onboarding flow based on user feedback." },
+        { f: "robust", b: "adj. 稳健的、健壮的。指系统在异常输入或高压下仍能正常工作。", t: "We need a more robust error handling mechanism." },
+        { f: "scalable / scalability", b: "adj. 可扩展的。指用户或数据量增长时，性能与成本仍然可控。", t: "Is this architecture scalable to ten million users?" },
+        { f: "validate", b: "v. 验证（用证据检验假设是否成立）。搭配：validate an assumption / a hypothesis。", t: "We validated the hypothesis with a two-week A/B test." },
+        { f: "mitigate", b: "v. 缓解、降低（风险）。目标是降低发生概率或影响程度，而非完全消除。", t: "We added a fallback path to mitigate hallucination risks." },
+        { f: "allocate", b: "v. 分配（预算、时间、人力）。搭配：allocate resources to + 事项。", t: "We allocated twenty percent of engineering capacity to tech debt." },
+        { f: "compliance / comply", b: "n. 合规；v. comply with 遵守（法规、规范）。", t: "The feature must comply with local data privacy regulations." },
+        { f: "ambiguous", b: "adj. 模糊的、有歧义的；n. ambiguity。需求文档的第一大忌。", t: "This requirement is ambiguous, so let us clarify the edge cases." },
+        { f: "concise", b: "adj. 简洁的，用最少的字把事情说清。写作与汇报的核心要求。", t: "Keep the weekly status update concise and action-oriented." },
+        { f: "comprehensive", b: "adj. 全面的、覆盖完整的。常与 list / analysis / guide 搭配。", t: "We need a comprehensive list of edge cases before coding." },
+        { f: "feasible", b: "adj. 可行的；n. feasibility。指技术或资源上做得到。", t: "Is real-time collaboration technically feasible within one month?" },
+        { f: "incremental", b: "adj. 渐进的、增量的。incremental improvement 指小步改进，与 breakthrough 相对。", t: "Most of our gains come from incremental improvements, not big redesigns." },
+        { f: "transparent", b: "adj. 透明的，信息对相关方可见。协作中用于降低猜疑与重复沟通。", t: "We keep the roadmap transparent across all partner teams." },
+        { f: "accountability", b: "n. 责任归属，明确谁对结果负责。RACI 矩阵中的 A（Accountable）。", t: "Every action item needs a clear owner and accountability." },
+        { f: "incentive", b: "n. 激励、动机。aligned / misaligned incentives 指激励是否与目标一致。", t: "The referral bonus creates a strong incentive to invite friends." },
+        { f: "churn", b: "n. 流失；churn rate 流失率，指一段时间内停止使用的用户比例。", t: "Our monthly churn dropped from eight percent to five percent." },
+        { f: "retention", b: "n. 留存；v. retain 留住。常用次日 / 七日 / 三十日留存衡量产品粘性。", t: "Day thirty retention is our north-star metric this year." },
+        { f: "conversion", b: "n. 转化；conversion rate 转化率，指完成目标动作的用户占比。", t: "The new onboarding flow lifted signup conversion by twelve percent." },
+        { f: "funnel", b: "n. 漏斗，用户从进入到转化逐步流失的多步骤路径。", t: "Let us analyze where users drop off in the signup funnel." },
+        { f: "insight", b: "n. 洞察，从数据或研究中提炼出的、能直接指导行动的结论（不是数据本身）。", t: "The key insight: users churn because setup takes over ten minutes." },
+        { f: "benchmark", b: "n. 基准、参照；v. 对标。用于把自身指标与行业或历史标准比较。", t: "We benchmark our activation rate against industry averages." }
+      ]
+    },
+    {
+      id: "en-phrase",
+      name: "职场高频短语",
+      desc: "开会、邮件、汇报里出现频率最高的地道搭配",
+      cards: [
+        { f: "buy-in", b: "n. 认可与支持。get buy-in from + 对象，指让关键人同意并愿意投入。", t: "We need buy-in from the legal team before we ship this." },
+        { f: "on the same page", b: "达成共识、理解一致。常用于会议开场对齐目标。", t: "Before we dive in, let us make sure we are on the same page." },
+        { f: "circle back (to)", b: "稍后再回来讨论某个话题，用于会议中暂时搁置细节。", t: "Let us circle back to the pricing question after the demo." },
+        { f: "touch base (with)", b: "简短沟通、同步一下进展，语气比 meeting 更轻。", t: "I will touch base with design tomorrow morning." },
+        { f: "move the needle", b: "带来实质性的改变。常用于判断某件事是否值得做。", t: "This redesign looks nice, but will it actually move the needle?" },
+        { f: "low-hanging fruit", b: "低垂的果实，指投入小、见效快的事情，优先级排序时的常见说法。", t: "Fixing the error message is low-hanging fruit with a real impact." },
+        { f: "take it offline", b: "将会上的细节讨论挪到会后单独进行，避免占用全体时间。", t: "That is a detailed debate, let us take it offline." },
+        { f: "action item", b: "待办事项，会议结束时必须明确 owner 和 deadline。", t: "Action item: Alice will draft the spec by Friday." },
+        { f: "follow up (on)", b: "跟进某事或某人，确保事情没有停在原地。", t: "I will follow up on the data issue with the analytics team." },
+        { f: "escalate (to)", b: "上报、升级问题层级，用于处理超出自身权限或阻塞的事项。", t: "If the bug is not fixed today, we should escalate it." },
+        { f: "roll out", b: "发布上线、逐步推广（可灰度）。名词 rollout。", t: "We will roll out the new editor to ten percent of users first." },
+        { f: "phase out", b: "逐步淘汰、停止使用某功能或系统。", t: "We are phasing out the legacy dashboard by year end." },
+        { f: "ramp up", b: "加码、提速、扩充（产能、投入、团队）。", t: "We plan to ramp up hiring in the second half." },
+        { f: "kick off", b: "启动（项目）。名词 kickoff / kickoff meeting 启动会。", t: "We will kick off the project with a scoping workshop." },
+        { f: "deep dive", b: "深入研究、专题拆解。可作名词 a deep dive into + 主题。", t: "Let us do a deep dive into the churn data next week." },
+        { f: "at scale", b: "大规模地。指方案在真实量级下依然成立。", t: "The workflow works in testing, but can it run at scale?" },
+        { f: "in the loop", b: "在信息同步圈内；keep someone in the loop 指让某人持续知情。", t: "Please keep me in the loop on any pricing changes." },
+        { f: "heads-up", b: "提前提醒、打个招呼。give someone a heads-up。", t: "Thanks for the heads-up about the server maintenance." },
+        { f: "bottom line", b: "最终结论、底线。the bottom line is + 结论。", t: "The bottom line is we cannot ship without a fallback." },
+        { f: "value proposition", b: "价值主张，产品为用户解决什么、凭什么被选择的那一句话。", t: "Our value proposition is setup in under five minutes." },
+        { f: "pain point", b: "痛点，用户真实而强烈的困扰。需求分析的起点。", t: "The biggest pain point is that reports take too long to load." },
+        { f: "go-to-market (GTM)", b: "上市与推广策略，涵盖定位、渠道、定价、销售打法。", t: "We will finalize the go-to-market plan before launch." },
+        { f: "bandwidth", b: "此处不是带宽，而指精力、余力、可调配的时间。", t: "I do not have the bandwidth to take on another project." },
+        { f: "push back (on)", b: "提出异议、顶回去。协作中是正常行为，需给出理由与替代方案。", t: "Engineering pushed back on the timeline, and they had good reasons." },
+        { f: "deliver on", b: "兑现（承诺）、达成（目标）。deliver on a promise / on results。", t: "We promised faster search, and we need to deliver on it." }
+      ]
+    },
+    {
+      id: "en-grammar",
+      name: "语法易错点",
+      desc: "写作和口语里最常丢分的 20 个坑",
+      cards: [
+        { f: "不可数名词：advice / information / feedback / research", b: "这些词没有复数，不能加 s；表示数量用 a piece of advice、some feedback。", t: "Correct: She gave me some useful feedback. Wrong: She gave me useful feedbacks." },
+        { f: "affect vs effect", b: "affect 是动词「影响」；effect 通常是名词「效果」。动词「实现」可用 effect change（较正式）。", t: "The delay affected the launch. The effect was a two-week slip." },
+        { f: "fewer vs less", b: "fewer 修饰可数复数（fewer users）；less 修饰不可数（less traffic）。时间/金额等整体量常用 less。", t: "We have fewer signups but less wasted spend." },
+        { f: "its vs it's", b: "its 是物主代词「它的」；it's = it is 或 it has。判断方法：试着展开成 it is，读不通就用 its。", t: "The model updated its weights. It's ready for testing." },
+        { f: "主谓一致：the team / each of", b: "集合名词在美式英语中通常作单数（the team is）；each / every 后用单数动词。", t: "Each of the options has a clear trade-off." },
+        { f: "现在完成时 vs 一般过去时", b: "与现在有关联、强调结果或持续用现在完成时（have done）；有明确过去时间点用一般过去时（did）。", t: "We have shipped three updates. We shipped the fix last Monday." },
+        { f: "used to do vs be used to doing", b: "used to do 指过去常常（现在不了）；be used to doing 指习惯于某事，to 是介词后接动名词。", t: "I used to write specs alone. Now I am used to pairing with design." },
+        { f: "despite / in spite of", b: "两者都接名词或动名词，不接完整句子；接句子需用 although。", t: "Despite the delay, we shipped. = Although we were delayed, we shipped." },
+        { f: "suggest / recommend that + 原形", b: "表示建议、要求、命令的动词后接 that 从句时，从句谓语用原形（虚拟语气），美式中常省略 should。", t: "We recommend that the team run the test for two weeks." },
+        { f: "定语从句关系词与省略", b: "先行词指人用 who / that，指物用 which / that；关系词作宾语时可省略。非限定性从句只能用 which，且加逗号。", t: "The metric (that) we chose turned out to be misleading." },
+        { f: "冠词：a / an / the / 零冠词", b: "首次提到、泛指用 a/an；双方都知道或已限定用 the；抽象概念与复数泛指用零冠词。", t: "We ran an experiment. The experiment failed. Feedback matters." },
+        { f: "固定介词搭配", b: "depend on、interested in、responsible for、consist of、focus on、result in。搭配错误是最常见的中式英语痕迹。", t: "She is responsible for the onboarding funnel." },
+        { f: "must have done（对过去的肯定推测）", b: "情态动词 + have done 表示对过去的判断；否定推测用 can't have done。", t: "The drop must have been caused by the tracking bug." },
+        { f: "倒装：Not only / Never / Seldom", b: "否定或半否定词置于句首时，主句需部分倒装（助动词提前），用于强调。", t: "Not only did the fix reduce errors, but it also cut latency." },
+        { f: "比较结构：as...as 与 more than", b: "同级比较用 as + 原级 + as；比较级用 more + 原级 + than，可加 much / far 强调。", t: "The new flow is far more efficient than the old one." },
+        { f: "悬垂分词（dangling modifier）", b: "分词短语的逻辑主语必须与主句主语一致，否则就是悬垂修饰。", t: "Wrong: Walking through the funnel, the bug was obvious. Right: Walking through the funnel, we found the bug." },
+        { f: "since vs for", b: "since 接时间点（since Monday），for 接时间段（for two weeks）。", t: "We have been testing since March, for about six weeks." },
+        { f: "would rather / had better", b: "两者后都接动词原形；would rather 表偏好，had better 表强烈建议或警告。", t: "I would rather fix it now. We had better tell the client today." },
+        { f: "逗号拼接（run-on sentence）", b: "两个完整句子不能仅用逗号连接。改用句号、分号、连词或改写为从句。", t: "Wrong: The test failed, we changed the design. Right: The test failed, so we changed the design." },
+        { f: "名词化过重", b: "过多使用 make a decision、conduct an analysis 会让句子笨重。优先用对应的动词 decide、analyze。", t: "Weak: We made a decision to conduct an analysis. Strong: We decided to analyze it." }
+      ]
+    },
+    {
+      id: "en-polish",
+      name: "表达升级",
+      desc: "把普通英文改写成更专业的英文",
+      cards: [
+        { f: "I think → 更专业的说法", b: "替换为 I'd argue that / From my perspective / My read is that，更坚定且不显得武断。", t: "From my perspective, retention is the bigger problem." },
+        { f: "very important → ?", b: "升级为 critical / essential / pivotal，避免 very + 形容词的口语堆砌。", t: "Fixing activation is critical to the launch." },
+        { f: "many people → ?", b: "升级为 a growing number of users / a large share of users，更适合数据表达。", t: "A growing number of users abandon setup at step three." },
+        { f: "We should → ?", b: "升级为 It would be advisable to / We'd be better off + doing，语气更审慎、留有余地。", t: "We would be better off testing this with a small cohort first." },
+        { f: "because → ?", b: "书面表达可升级为 given that / in light of / due to，注意 due to 后接名词。", t: "Given that the sample is small, we should wait for more data." },
+        { f: "In conclusion → ?", b: "升级为 To wrap up / In short / The takeaway is，更自然。", t: "To wrap up, we need alignment on the metric before Friday." },
+        { f: "show → ?", b: "升级为 illustrate / demonstrate / indicate，程度由强到弱可区分。", t: "The data indicates a steady decline in repeat usage." },
+        { f: "big increase → ?", b: "升级为 a substantial / significant increase；剧烈增长可用 a surge。", t: "We saw a significant increase in week-one retention." },
+        { f: "bad → ?", b: "升级为 detrimental / adverse / negative，区分程度和语境。", t: "The change had an adverse effect on load time." },
+        { f: "good → ?", b: "升级为 beneficial / advantageous / favorable。", t: "The trade-off is favorable for power users." },
+        { f: "problem → ?", b: "升级为 challenge / pain point / friction。friction 特指流程中的阻力。", t: "The main friction is the repeated login prompt." },
+        { f: "use → ?", b: "升级为 leverage / make use of / draw on，强调目的性。", t: "We can draw on last quarter's research." },
+        { f: "change → ?", b: "升级为 transform / reshape / revise（小幅修改为 revise）。", t: "The feature reshaped how teams share reports." },
+        { f: "help → ?", b: "升级为 facilitate / enable / support。enable 强调使某事成为可能。", t: "The API enables third-party integrations." },
+        { f: "start → ?", b: "升级为 initiate / kick off / roll out，按正式程度选择。", t: "We initiated a review of all tracking events." },
+        { f: "improve → ?", b: "升级为 optimize / enhance / refine。refine 用于细节打磨，optimize 用于指标导向。", t: "We refined the copy to reduce confusion." },
+        { f: "need → ?", b: "升级为 require / necessitate，语气更正式。", t: "This change requires a migration plan." },
+        { f: "about → ?", b: "升级为 regarding / concerning / with respect to，用于邮件与文档。", t: "I am writing regarding the launch checklist." },
+        { f: "a lot of → ?", b: "可数用 a considerable number of，不可数用 a substantial amount of。", t: "A considerable number of users never reach step two." },
+        { f: "图表趋势动词", b: "上升 climb / surge；下降 decline / plummet；平稳 remain stable / plateau；波动 fluctuate。", t: "Usage climbed in March, then plateaued in April." }
+      ]
+    }
+  ]
+};
+
+</script>
+<script>
+/* 内置知识库：产品经理
+ * card: { f: 正面（概念或问题）, b: 背面（要点与判断标准）, t: 例子或落地用法 }
+ */
+window.KB_PM = {
+  id: "pm",
+  name: "产品经理",
+  subtitle: "从需求到增长的方法论",
+  icon: "PM",
+  accent: "#22C7A0",
+  decks: [
+    {
+      id: "pm-basic",
+      name: "产品认知与思维",
+      desc: "建立判断力的底层框架",
+      cards: [
+        { f: "产品经理到底负责什么？", b: "核心职责是在不确定中做决策：决定做什么、不做什么，以及为什么现在做。产出不是文档，而是被验证过的判断。", t: "判断标准：你能否说清这个功能服务哪个用户、解决什么问题、用什么指标证明有效。" },
+        { f: "用户价值 / 商业价值 / 技术可行性三角", b: "任何方案都要同时过三关：用户真的需要、公司能赚钱或获得战略资产、技术上做得出来。缺一角的需求应被质疑。", t: "用户想要无限免费额度（用户价值高），但单位成本失控（商业不成立），应改设计而非硬做。" },
+        { f: "MVP 最小可行产品", b: "用最小成本验证最关键假设的版本。关键在「验证假设」，不是「功能残缺」。先想清楚要验证的那个唯一假设是什么。", t: "想验证「用户愿意为自动报告付费」，MVP 可以是人工在后台生成报告 + 付费按钮，不需要真的做自动化引擎。" },
+        { f: "PMF（产品市场契合）", b: "产品满足了某一群人强烈且真实的需求。信号：留存曲线走平、用户自发推荐、增长不再依赖强推。", t: "判断经验：一定比例用户表示「如果产品停掉会很失望」，是常用的 PMF 自测指标。" },
+        { f: "产品生命周期", b: "引入期（验证价值）→ 成长期（放大获客与留存）→ 成熟期（精细化与商业化）→ 衰退期（迁移或重塑）。不同阶段的目标完全不同。", t: "成熟期硬套成长期的「增长优先」打法，往往导致成本失控。" },
+        { f: "Jobs to be Done（用户要完成的任务）", b: "用户不是买产品，而是「雇佣」产品去完成某个任务。用「当……时，我想……以便……」描述，能跳出表面需求看到真实动机。", t: "用户买钻头，真实任务是「在墙上挂稳一幅画」，竞争者可能是无痕挂钩。" },
+        { f: "产品愿景与路线图 Roadmap", b: "愿景是 3-5 年终局；路线图是通向愿景的阶段性承诺，按问题和目标组织，而非按功能清单罗列。", t: "好的路线图写「提升新用户首周留存到 40%」，而不是「Q3 做新手引导 2.0」。" },
+        { f: "KANO 模型", b: "把需求分五类：基本型（没有会不满）、期望型（越多越好）、兴奋型（有则惊喜）、无差异型、反向型。资源应优先保基本、提期望、找兴奋点。", t: "加载速度属基本型：做到不加分，做不到直接掉留存。" },
+        { f: "二八法则与聚焦", b: "少数功能贡献多数价值。砍需求时问：如果只能保留 20%，留下哪些？被砍的往往本就不该做。", t: "数据常显示 80% 的用量集中在 3-5 个核心路径上。" },
+        { f: "什么是「产品 sense」", b: "面对模糊问题时快速抓住关键变量的能力 = 大量真实案例的积累 + 对用户与商业的理解 + 对数据的敏感。可训练，不玄学。", t: "训练法：每天拆解一个产品，写下「它为什么这样设计、我会怎么改、改了看什么指标」。" },
+        { f: "B 端与 C 端产品的差异", b: "C 端重体验与增长、决策快、用户即买单者；B 端重流程与效率、决策链长、使用者与付费者分离，还要考虑角色权限与实施成本。", t: "B 端常出现「老板满意、一线不用」的失败，因为采购者与使用者目标不一致。" },
+        { f: "平台型 / 工具型 / 内容型产品", b: "工具型靠单点效率取胜（护城河是体验与习惯）；内容型靠供给与分发（护城河是内容与算法）；平台型靠双边网络效应（最难冷启动，一旦成型最稳）。", t: "工具型产品做社区往往失败，因为用户是「用完即走」心智。" },
+        { f: "PRD 的核心结构", b: "背景与目标（为什么做）→ 用户与场景（给谁用）→ 方案与流程（怎么做）→ 边界与异常（不做什么）→ 指标与验收（怎么算成功）。前两项决定后三项的质量。", t: "一份好 PRD，研发读完应能独立说出「这个功能想解决什么」。" },
+        { f: "需求、功能、方案的区别", b: "需求是用户的目的，功能是载体，方案是具体实现。把需求直接当方案执行，是大量返工的根源。", t: "用户说「想要一个导出按钮」（方案），真实需求是「把数据交给老板看」，方案可能是分享链接。" }
+      ]
+    },
+    {
+      id: "pm-req",
+      name: "需求分析与优先级",
+      desc: "把杂乱需求变成有序决策",
+      cards: [
+        { f: "需求采集的四个来源", b: "用户反馈（客服/应用商店/社群）、数据（行为漏斗与流失）、业务方（销售/运营/老板）、行业与技术趋势。四类都要有，偏食会导致失真。", t: "只听销售做 B 端，会变成「大客户定制机」，产品无法复用。" },
+        { f: "需求池怎么管", b: "统一入口、标准字段（来源/场景/预估价值/成本/状态）、定期评审、明确「暂不做」也要记录理由。需求池的价值在于可追溯，不在于堆量。", t: "每条需求都要留「是谁、在什么场景、因为什么提出」，否则半年后无法判断。" },
+        { f: "RICE 优先级模型", b: "Reach（影响人数）× Impact（单人次影响程度）× Confidence（信心）/ Effort（工作量）。适合做季度级排序，能量化对比不同性质的需求。", t: "影响 10 万人、每人提升 2%、信心 80%、需 2 人月，可与另一个需求直接算分对比。" },
+        { f: "MoSCoW 优先级", b: "Must（不做就失败）/ Should（重要但可延后）/ Could（锦上添花）/ Won't（本次明确不做）。适合版本范围内的快速收敛。", t: "上线前一周用 MoSCoW 裁剪范围，比无休止争论高效。" },
+        { f: "KANO 与优先级结合", b: "基本型需求优先兜底（不做会流失），期望型做 ROI 排序，兴奋型用小成本低风险方式试。不要拿基本型需求去做亮点宣传。", t: "「系统不卡顿」是基本型，宣传它等于承认之前很卡。" },
+        { f: "如何识别伪需求", b: "三问：用户说的时候有没有真实场景？他现在用什么替代方案、为此付出多少成本？如果免费提供他会改变行为吗？看行为，不看表态。", t: "问卷里 80% 说想要，上线后 3% 使用 —— 典型表态与行为背离。" },
+        { f: "需求评审要看什么", b: "看五件事：目标是否清晰、场景是否具体、边界是否穷举（异常/空态/权限/并发）、指标是否可测、依赖是否识别。", t: "评审中最有价值的问题往往是「这个字段为空时显示什么」。" },
+        { f: "范围蔓延 scope creep", b: "开发中不断插入新需求导致延期与质量下降。治理方法：冻结窗口 + 变更必须换出等价工作量 + 变更留痕。", t: "「顺手加一个小功能」积累三次，就吃掉一个版本的测试时间。" },
+        { f: "BRD / MRD / PRD 的区别", b: "BRD 讲商业价值（为什么值得投钱）、MRD 讲市场与用户（机会在哪）、PRD 讲实现方案（具体怎么做）。面向的对象分别是决策层、市场与产品、研发与设计。", t: "向上汇报要 BRD 的逻辑，给研发要 PRD 的细节。" },
+        { f: "用户故事与 INVEST 原则", b: "格式：作为【角色】，我希望【动作】，以便【价值】。好的故事满足 Independent、Negotiable、Valuable、Estimable、Small、Testable。", t: "「作为新用户，我希望能一键导入通讯录，以便快速找到好友」。" },
+        { f: "验收标准 AC 怎么写", b: "用可判定的条件描述：给定什么前提、执行什么操作、预期什么结果，含异常分支。AC 是研发与测试的共同依据。", t: "弱 AC：导入要快。强 AC：500 条联系人导入 3 秒内完成，失败时提示并可重试。" },
+        { f: "需求分级 P0-P3", b: "P0 阻塞上线或严重影响核心；P1 重要但有替代方案；P2 体验优化；P3 长期设想。分级只在具体版本语境下有意义。", t: "「这是 P0」必须配一句「因为它阻塞了 30% 用户的下单路径」。" },
+        { f: "技术可行性与成本的沟通", b: "不要问「能不能做」，要问「做这件事的代价是什么、有没有更便宜的替代路径、技术债有多重」。让研发给出方案选项而非简单 yes/no。", t: "实时同步要 6 人月；改为「手动刷新 + 智能提示」只需 1 人月，能覆盖 90% 场景。" },
+        { f: "需求追溯", b: "建立「目标 → 需求 → 功能 → 指标」的链路，任何一个功能都能回答它服务于哪个目标；上线后能回溯当初的假设是否成立。", t: "季度复盘时，追溯能帮你看清哪些投入是纯沉没成本。" }
+      ]
+    },
+    {
+      id: "pm-research",
+      name: "用户研究",
+      desc: "在不确定性中找到真实答案",
+      cards: [
+        { f: "定性研究与定量研究", b: "定性（访谈、观察）回答「为什么」，样本小但能发现未知问题；定量（数据、问卷）回答「有多少、是谁」，能验证规模。先定性发现，再定量验证。", t: "访谈发现「用户不知道能导出」，再看数据确认有多少人卡在这一步。" },
+        { f: "用户访谈的关键技巧", b: "问事实与经历而非观点与预测（你上次是怎么做的，而不是你会怎么做）；不引导、不解释产品；多追问「然后呢」「当时为什么」；让对方讲故事。", t: "差问题：你会用这个功能吗？好问题：上次你要把数据发给同事，是怎么做的？" },
+        { f: "问卷设计的坑", b: "避免引导性措辞与双重问题、避免让用户预测未来、选项要穷尽且互斥、控制长度（不超过 5 分钟）、先小样本试填。", t: "「您是否喜欢我们优秀的新功能？」是典型引导式提问，数据毫无价值。" },
+        { f: "用户画像 Persona", b: "基于真实研究抽象出的典型用户模型，包含目标、场景、行为特征与痛点。价值在于让团队讨论「同一个用户」，而不是各说各话。", t: "错误做法：凭想象编一个「25 岁白领小李」，没有任何数据支撑。" },
+        { f: "用户旅程地图", b: "按阶段拆解用户从认知到忠诚的全流程，标注每阶段的动作、触点、情绪与痛点，找出体验断点与机会点。", t: "画完常发现最大流失不在产品内，而在「注册后收到一封看不懂的邮件」。" },
+        { f: "可用性测试", b: "让真实用户用原型完成真实任务，观察卡点而非听评价。5 个用户通常能发现大部分主要问题；任务设计要中立，不提示操作路径。", t: "给出任务「把本月报告发给同事」，然后闭嘴观察，不要说「你可以点右上角」。" },
+        { f: "数据告诉你要不要做，访谈告诉你为什么", b: "数据能定位「在哪流失」，但不能解释「为什么流失」；访谈能解释原因，但不能说明规模。两者互补，缺一会导致误判。", t: "数据显示某按钮点击低，访谈发现是因为文案用了内部术语，用户看不懂。" },
+        { f: "同理心地图", b: "围绕一个用户，梳理他「看到/听到/想到/说到/做到」的内容，以及痛点与收益。适合快速对齐团队对用户的理解。", t: "常用于工作坊开场，30 分钟就能暴露团队认知差异。" },
+        { f: "焦点小组的局限", b: "群体环境易被意见领袖带偏、社会赞许效应让人说场面话，不适合探索个人真实行为。适合概念刺激与共创，不适合验证需求真实性。", t: "想要真实的个人使用动机，一对一访谈远优于焦点小组。" },
+        { f: "流失用户访谈的价值", b: "留存用户会告诉你如何更好，流失用户会告诉你为什么失败。重点问：什么时候开始不用的、当时发生了什么、现在用什么替代、什么能让你回来。", t: "流失访谈常发现的决定性因素，是产品内数据完全看不到的外部事件。" },
+        { f: "NPS 净推荐值", b: "用「多大可能推荐给朋友」0-10 分衡量，推荐者减贬损者的占比。适合做长期趋势监测，不宜作为唯一目标（容易被运营动作污染）。", t: "NPS 上升但留存没变，说明可能只是调研样本变了，而非体验变好。" },
+        { f: "用户反馈闭环", b: "建立「收集 → 分级 → 归因 → 处理 → 回复用户 → 复盘」的闭环，并公开处理进度。闭环本身就能提升用户满意度。", t: "哪怕回复「已记录，暂不计划支持，原因是……」，也远好过石沉大海。" }
+      ]
+    },
+    {
+      id: "pm-metric",
+      name: "数据与指标体系",
+      desc: "用数据做判断，而不是做装饰",
+      cards: [
+        { f: "北极星指标", b: "唯一能代表产品核心价值的指标，同时反映用户获得的价值与公司获得的收益。它应随产品阶段演进，并用来对齐全团队。", t: "搜索产品的北极星可能是「有效搜索次数」，而非注册用户数。" },
+        { f: "指标体系分层", b: "分三层：结果指标（北极星与业务结果）、过程指标（驱动结果的关键行为）、健康指标（性能、投诉、成本等底线）。只看结果会滞后，只看过程会跑偏。", t: "GMV 是结果，加购率是过程，崩溃率是健康指标。" },
+        { f: "AARRR 漏斗", b: "获客 → 激活 → 留存 → 收入 → 推荐。用于定位增长瓶颈在哪一环，并据此分配资源；不同阶段的产品重点不同。", t: "激活率低时砸钱获客，等于把水倒进漏桶。" },
+        { f: "埋点与事件模型", b: "事件 = 谁（用户标识）+ 在何时 + 做了什么（事件名）+ 附加属性。设计要点：命名规范统一、属性完整、先有指标再有埋点。", t: "错误做法：先把能埋的都埋了，之后发现关键问题没有对应字段。" },
+        { f: "活跃的定义：DAU / WAU / MAU", b: "必须自己定义「活跃」的行为标准（如当日产生一次核心行为），否则数字不可比。DAU/MAU 衡量粘性，比值越高说明用户越习惯使用。", t: "把「打开 App」算活跃，会让营销推送的效果被严重高估。" },
+        { f: "留存曲线与留存率", b: "留存率指某日新增用户在第 N 日仍活跃的比例。看曲线是否走平：走平说明产品留住了核心用户，是 PMF 的强信号。", t: "次日留存 40%、7 日 20%、30 日 18% —— 说明 7 日后曲线走平，核心用户留下了。" },
+        { f: "漏斗分析怎么做", b: "定义步骤 → 统一口径 → 看整体转化率与分步流失 → 分群对比（渠道/版本/用户类型）→ 定位最大流失步 → 形成假设并实验。", t: "整体转化率下降 5%，拆分后发现只发生在某个安卓机型上。" },
+        { f: "A/B 实验基本流程", b: "形成假设 → 确定指标（一个主指标 + 若干护栏指标）→ 计算样本量 → 随机分流 → 跑够周期（覆盖完整周内波动）→ 检验显著性 → 决策全量或回滚。", t: "只跑 3 天就下结论，往往把周末效应当成实验效果。" },
+        { f: "统计显著性与样本量", b: "p 值衡量「观察到的差异由随机波动导致的概率」，样本越小越容易得出不稳定结论。样本量由基线转化率、最小可检测提升、显著性水平与统计功效共同决定。", t: "基线转化 1%、想检测 10% 相对提升，通常需要几十万级样本，小流量产品应考虑改用定性验证。" },
+        { f: "辛普森悖论", b: "分组看都是 A 更好，合并后 B 更好（或相反）。原因是各组的构成比例不同。解决办法：先分层看，再做加权或标准化。", t: "新版本整体转化更高，只是因为它被分配到了更多高活跃渠道上。" },
+        { f: "相关性不等于因果", b: "两件事同时发生不代表存在因果。确认因果需满足时间先后、排除混杂变量、最好有实验或自然实验佐证。", t: "付费用户留存更高，可能是「高意愿用户本来就更容易付费」，而不是付费导致留存。" },
+        { f: "同期群分析 Cohort", b: "按用户进入时间或行为分组，追踪各组随时间的表现，能剥离「用户结构变化」带来的假象，是判断改版是否真的有效的利器。", t: "整体留存上升，可能是新用户质量变好；分同期群看老用户反而下降。" },
+        { f: "数据口径与校验", b: "任何数字都要先问：定义是什么、统计窗口是什么、去重规则是什么、与谁对齐。上线后必须做埋点校验（抓包 + 抽样比对）。", t: "运营和产品的「活跃用户」差 30%，多半是去重口径不同，而非真有问题。" },
+        { f: "RFM 用户分层", b: "按最近一次消费（Recency）、消费频次（Frequency）、消费金额（Monetary）给用户分层，针对不同层采取不同策略（召回、提频、提客单）。", t: "重要保持客户做权益，重要挽留客户做定向召回，一般发展客户做首单转化。" }
+      ]
+    },
+    {
+      id: "pm-biz",
+      name: "商业与增长",
+      desc: "让产品活下来并长大",
+      cards: [
+        { f: "商业模式画布", b: "九个模块：客户细分、价值主张、渠道、客户关系、收入来源、核心资源、关键活动、合作伙伴、成本结构。用一页纸说清生意如何成立。", t: "用它做竞品拆解，能快速看出对手真正的成本大头在哪。" },
+        { f: "常见收入模型", b: "订阅制（可预测现金流）、交易抽成（随规模放大）、广告（变现流量）、增值服务（免费 + 付费升级）、授权与 API（技术变现）。选择取决于价值交付方式。", t: "工具型产品适合订阅；低频高客单价的交易适合抽成。" },
+        { f: "LTV / CAC 与 LTV:CAC", b: "LTV 是用户生命周期总价值，CAC 是获客成本。健康比例通常认为应在 3 倍以上，过高说明获客投入不足，过低说明烧钱换增长。", t: "CAC 200 元、月均贡献 30 元、平均留存 20 个月 → LTV 600 元，比值 3。" },
+        { f: "单位经济模型", b: "不看总量看单体：单个用户（或单笔订单）的收入减去其全部变动成本是否为正、多久回本。总量增长掩盖单体亏损是最危险的陷阱。", t: "每单毛利 -5 元时，订单越多亏得越多，规模效应救不了错误的模型。" },
+        { f: "增长飞轮", b: "找到一个能自我强化的闭环：更多用户 → 更多数据/内容/供给 → 更好体验 → 更多用户。关键是找出你的飞轮第一推动力。", t: "内容社区飞轮：内容多 → 留存好 → 创作者多 → 内容更多。" },
+        { f: "Aha moment 与魔法数字", b: "Aha moment 是用户第一次感受到核心价值的时刻；魔法数字是达成后留存显著提升的行为阈值。产品设计的目标是把用户尽早推到这一刻。", t: "某协作产品发现：一周内邀请 3 名同事的团队，留存远高于其他用户。" },
+        { f: "渠道与获客成本", b: "渠道分付费、自有、自然与口碑。评估不能只看 CAC，还要看用户质量（留存与 LTV）与可扩展性。渠道会衰减，需持续测试新渠道。", t: "某渠道 CAC 最低，但 30 日留存只有主流渠道的三分之一，实际并不便宜。" },
+        { f: "病毒系数 K factor", b: "K = 每个用户带来的新用户数。K>1 才会自增长，实际中几乎不可持续，因此更重要的是缩短病毒循环周期、提高邀请转化。", t: "K=0.6 但循环周期只有 2 天，增长仍可能快于 K=0.9 而周期 30 天的产品。" },
+        { f: "定价策略", b: "三类：成本加成、竞争对标、价值定价。软件优先价值定价（按用户感知价值与替代方案定价），并用套餐分级做价格歧视。", t: "按「帮客户省了多少人力成本」定价，往往远高于按功能数量定价。" },
+        { f: "免费增值 Freemium", b: "免费层负责获客与习惯养成，付费层负责变现。关键设计是「免费层的天花板」要卡在用户真正产生依赖之后。", t: "免费版限制协作人数，个人用足够，团队协作就必须付费。" },
+        { f: "流失与召回", b: "先定义流失（多久未产生核心行为），再分可召回与不可召回，用不同触达手段（push/短信/邮件/人工）。召回成功率远低于预防成本。", t: "对 30 天未活跃用户发「你的数据还在」类提醒，效果通常好于纯优惠。" },
+        { f: "TAM / SAM / SOM", b: "TAM 总潜在市场、SAM 可服务市场、SOM 可获取市场。用于论证市场空间与制定目标，避免用 TAM 冒充自己的目标。", t: "对外讲 TAM 讲故事，对内定目标看 SOM。" }
+      ]
+    },
+    {
+      id: "pm-collab",
+      name: "项目推进与协作",
+      desc: "把方案真正落地",
+      cards: [
+        { f: "敏捷 vs 瀑布", b: "瀑布适合需求稳定、变更成本极高的场景；敏捷适合需求不确定、需要快速验证的场景。选型依据是「需求不确定性」与「变更成本」。", t: "合规系统改造适合瀑布式阶段验收；C 端增长实验适合两周一个迭代。" },
+        { f: "Sprint 与看板", b: "Sprint 是固定周期的迭代（含计划、开发、评审、复盘）；看板强调限制在制品数量、拉动式流动。前者适合节奏明确，后者适合支持类突发工作。", t: "运维支持团队用看板常比强行套 Sprint 更高效。" },
+        { f: "每日站会的目的", b: "同步阻塞与调整计划，不是汇报进度。三句话：昨天做了什么、今天做什么、有什么阻塞。超 15 分钟通常说明问题被带进了会议。", t: "站会上暴露「等设计稿」的阻塞，会后立刻解决，才是站会的价值。" },
+        { f: "版本管理与灰度发布", b: "用灰度（按用户/比例/地域逐步放量）+ 开关 + 监控 + 回滚预案控制风险。放量节奏与观察指标必须提前定义。", t: "先 1% 观察崩溃率与核心转化，24 小时无异常再放量到 10%。" },
+        { f: "RACI 责任矩阵", b: "区分 Responsible（执行）、Accountable（最终负责，唯一）、Consulted（被咨询）、Informed（被知会）。Accountable 只能有一个，否则就是无人负责。", t: "需求评审会上没有 Accountable，会导致谁都能改需求、谁都不担结果。" },
+        { f: "与研发 / 设计 / 运营的协作边界", b: "PM 负责目标与取舍，研发负责实现与技术方案，设计负责体验与交互，运营负责触达与增长。跨界要提建议而非替对方决策。", t: "PM 可以说「这个页面 3 秒加载不可接受」，但不必规定用哪种缓存方案。" },
+        { f: "上线 Checklist", b: "至少覆盖：功能回归、数据与埋点校验、性能与兼容、文案与法务合规、客服话术与帮助文档、监控告警、回滚方案、相关方通知。", t: "最常漏的两项：埋点没校验、客服不知道新功能上线了。" },
+        { f: "复盘怎么做", b: "对事不对人，按「目标 → 结果 → 差异 → 原因 → 下次怎么做」推进，产出必须是可执行的动作项并跟踪落地。", t: "复盘结论是「下次排期前先做技术可行性评估」，而不是「大家要更重视排期」。" },
+        { f: "排期与关键路径", b: "找出决定总工期的最长依赖链（关键路径），优先保障其资源；并行任务间的接口与联调时间必须显式留出。", t: "前后端并行开发 5 天，但联调只留半天，是典型的排期失误。" },
+        { f: "向上沟通与汇报", b: "结论先行，先说结果与判断，再说依据；给选项而非只给问题；同步风险要早且带方案。汇报的目的是帮对方做决策。", t: "差：遇到了很多问题。好：上线大概率延期 3 天，建议砍掉 X 保主流程，需要你确认。" }
+      ]
+    },
+    {
+      id: "pm-ai",
+      name: "AI 产品",
+      desc: "概率性输出带来的新方法论",
+      cards: [
+        { f: "AI 产品与传统产品的根本差异", b: "传统软件是确定性逻辑（输入 A 必得 B），AI 产品是概率性输出（同样输入可能不同结果）。因此不能用写死规则的思路做 AI 产品，必须围绕「不确定性」设计。", t: "传统：点按钮弹窗。AI：生成结果可能好可能坏，需要评估、兜底与用户纠偏通道。" },
+        { f: "提示词与上下文工程", b: "把模型当成一个「能力很强但没有背景信息的新同事」：给足角色、任务、约束、示例与数据。上下文的质量决定输出质量的上限。", t: "加「你是资深客服，只依据以下知识库回答，不确定的内容必须说不知道」，能显著降低瞎编率。" },
+        { f: "RAG 检索增强生成", b: "先从知识库中检索相关片段，再让模型基于片段作答。核心价值：降低幻觉、可溯源、知识更新无需重训。关键在切分策略与召回质量。", t: "RAG 效果差时，八成问题出在文档切分与检索排序，而不是模型不够强。" },
+        { f: "Agent 与工作流编排", b: "Agent = 模型 + 工具 + 记忆 + 规划。设计原则：能用固定流程解决的不要交给自主规划，越自主越难控质量与成本。", t: "报销审核适合固定流程 + 关键节点模型判断，不适合完全自主 Agent。" },
+        { f: "幻觉与可控性治理", b: "手段包括：限定知识源与拒答机制、引用溯源、结构化输出 + 校验、关键场景人工复核、低置信度降级。先定义「错不起的场景」再上治理。", t: "医疗、金融、法务建议类场景必须有人审环节与明确免责。" },
+        { f: "AI 效果怎么评估", b: "三层：离线评测集（固定题目批量跑分，用于快速迭代）、人工抽检（主观质量）、在线指标（解决率、采纳率、转人工率、留存）。三者缺一不可。", t: "只用人工感受判断「变好了」，很容易被样例选择偏差误导。" },
+        { f: "成本、延迟与效果的三角", b: "更强的模型通常更贵更慢。工程手段：分级路由（简单问题走小模型）、缓存、流式输出降低感知延迟、批处理降本。", t: "先用小模型做意图分类与筛选，只有 10% 的复杂请求走大模型，成本可大幅下降。" },
+        { f: "模型选型", b: "通用大模型（能力全、成本较高）、微调（稳定特定格式与风格，需数据与维护成本）、小模型（便宜快，适合垂直固定任务）、多模态（理解图像/语音）。先明确任务再选模型。", t: "固定格式的意图分类，微调小模型往往比直接调大模型更稳更便宜。" },
+        { f: "人机协同设计", b: "把 AI 定位为「助手」而非「替代」：提供草稿而非终稿、提供建议而非决策、保留一键修改与反馈入口。用户纠错的数据正是迭代燃料。", t: "AI 生成客服回复 → 人工确认后发送 → 修改记录回流为优化样本。" },
+        { f: "数据飞轮与冷启动", b: "用户使用产生数据 → 数据优化模型与知识库 → 体验变好 → 更多使用。冷启动期可用人工标注、公开数据、规则兜底先把体验拉过及格线。", t: "早期用人工整理的 FAQ + 规则匹配兜底，积累真实问题后再上模型。" },
+        { f: "AI 产品的专属指标", b: "除通用留存外，还应看：首答解决率、结果采纳率/编辑率、转人工率、任务完成时长、单次成本、拒答率。其中「采纳率」最能反映真实价值。", t: "生成内容被用户原样采用的比例低于 30%，说明功能实际价值有限。" },
+        { f: "AI 合规与伦理", b: "关注数据隐私与授权、训练数据来源与版权、内容安全与审核、算法公平与可解释、用户知情权（是否告知由 AI 生成）。这些是上线前置条件，不是补丁。", t: "用户上传的文档是否用于训练，必须在协议中明确并提供开关。" }
+      ]
+    }
+  ]
+};
+
+</script>
+<script>
+/* 存储层：数据模型 / 间隔重复调度 / 统计 / 导入导出 */
+(function () {
+  "use strict";
+
+  var KEY = "learnapp.v1";
+  var DAY = 86400000;
+
+  /* ---------- 学习路径（阶段 → deck） ---------- */
+  var PATHS = {
+    english: [
+      { name: "阶段一 · 词汇地基", goal: "掌握职场高频词，能读懂英文邮件与文档", decks: ["en-vocab"] },
+      { name: "阶段二 · 地道表达", goal: "开会与邮件中听懂、用对高频短语", decks: ["en-phrase"] },
+      { name: "阶段三 · 精准语法", goal: "写作不踩常见语法坑", decks: ["en-grammar"] },
+      { name: "阶段四 · 表达升级", goal: "把普通英文改写成专业英文", decks: ["en-polish"] }
+    ],
+    pm: [
+      { name: "阶段一 · 产品认知", goal: "建立判断需求与方案价值的底层框架", decks: ["pm-basic"] },
+      { name: "阶段二 · 需求与用户", goal: "把杂乱需求变成有序决策，学会做研究", decks: ["pm-req", "pm-research"] },
+      { name: "阶段三 · 数据与实验", goal: "用指标和 A/B 实验验证判断", decks: ["pm-metric"] },
+      { name: "阶段四 · 商业与增长", goal: "理解钱怎么赚、用户怎么长", decks: ["pm-biz"] },
+      { name: "阶段五 · 落地与 AI", goal: "把方案推进上线，理解 AI 产品方法论", decks: ["pm-collab", "pm-ai"] }
+    ]
+  };
+
+  /* ---------- 状态 ---------- */
+  var state = null;
+  var index = { cards: [], byId: {}, byDeck: {}, decks: [], domains: [] };
+
+  function defaultState() {
+    return {
+      version: 1,
+      settings: { theme: "dark", dailyNew: 10, dailyReview: 40, activeDomain: "english" },
+      progress: {},
+      stats: {},
+      customDomains: [],
+      customDecks: [],
+      custom: [],
+      createdAt: Date.now()
+    };
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      state = raw ? JSON.parse(raw) : defaultState();
+    } catch (e) {
+      state = defaultState();
+    }
+    if (!state.settings) state.settings = defaultState().settings;
+    if (!state.progress) state.progress = {};
+    if (!state.stats) state.stats = {};
+    if (!state.custom) state.custom = [];
+    if (!state.customDecks) state.customDecks = [];
+    if (!state.customDomains) state.customDomains = [];
+    buildIndex();
+    return state;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn("保存失败", e);
+    }
+  }
+
+  /* ---------- 索引 ---------- */
+  function buildIndex() {
+    index = { cards: [], byId: {}, byDeck: {}, decks: [], domains: [] };
+    var domains = [window.KB_ENGLISH, window.KB_PM];
+    domains.forEach(function (d) {
+      index.domains.push({ id: d.id, name: d.name, subtitle: d.subtitle, icon: d.icon, accent: d.accent, builtin: true });
+      d.decks.forEach(function (deck) {
+        index.decks.push({ id: deck.id, domainId: d.id, name: deck.name, desc: deck.desc, domainName: d.name, accent: d.accent, builtin: true });
+        index.byDeck[deck.id] = [];
+        deck.cards.forEach(function (c, i) {
+          var card = {
+            id: d.id + ":" + deck.id + ":" + i,
+            f: c.f, b: c.b, t: c.t || "",
+            deckId: deck.id, domainId: d.id, domainName: d.name, deckName: deck.name,
+            builtin: true
+          };
+          index.cards.push(card);
+          index.byId[card.id] = card;
+          index.byDeck[deck.id].push(card);
+        });
+      });
+    });
+    // 自定义领域（用户新建的）
+    (state.customDomains || []).forEach(function (d) {
+      if (index.domains.some(function (x) { return x.id === d.id; })) return;
+      index.domains.push({ id: d.id, name: d.name, subtitle: "自定义", icon: d.icon || "MY", accent: "#F5A524", builtin: false });
+    });
+    // 兼容：早期版本只有 customDecks 的情况
+    (state.customDecks || []).forEach(function (d) {
+      if (index.domains.some(function (x) { return x.id === d.domainId; })) return;
+      index.domains.push({ id: d.domainId, name: d.domainName || "我的知识库", subtitle: "自定义", icon: "MY", accent: "#F5A524", builtin: false });
+    });
+    (state.customDecks || []).forEach(function (deck) {
+      index.decks.push({ id: deck.id, domainId: deck.domainId, name: deck.name, desc: deck.desc || "", domainName: deck.domainName || "我的知识库", accent: "#F5A524", builtin: false });
+      index.byDeck[deck.id] = [];
+    });
+    (state.custom || []).forEach(function (c) {
+      var card = {
+        id: c.id, f: c.f, b: c.b || "", t: c.t || "",
+        deckId: c.deckId, domainId: c.domainId, domainName: c.domainName || "我的知识库",
+        deckName: (index.decks.find(function (d) { return d.id === c.deckId; }) || {}).name || "未分组",
+        builtin: false
+      };
+      index.cards.push(card);
+      index.byId[card.id] = card;
+      if (!index.byDeck[card.deckId]) index.byDeck[card.deckId] = [];
+      index.byDeck[card.deckId].push(card);
+    });
+  }
+
+  /* ---------- 日期 ---------- */
+  function dayKey(ts) {
+    var d = ts === undefined ? new Date() : new Date(ts);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function todayKey() { return dayKey(Date.now()); }
+
+  /* ---------- SRS ---------- */
+  function getProgress(id) {
+    return state.progress[id] || null;
+  }
+
+  // 掌握度：0 未学 1 学习中 2 巩固中 3 已掌握
+  function mastery(id) {
+    var p = state.progress[id];
+    if (!p) return 0;
+    if (p.i >= 21) return 3;
+    if (p.i >= 7) return 2;
+    return 1;
+  }
+
+  // grade: 0 忘记 1 模糊 2 掌握
+  function review(id, grade) {
+    var now = Date.now();
+    var p = state.progress[id] || { e: 2.5, i: 0, r: 0, l: 0, due: 0 };
+    var before = mastery(id);
+    if (grade === 0) {
+      p.l++;
+      p.r = 0;
+      p.i = 0;
+      p.due = now + 10 * 60 * 1000; // 10 分钟后再来
+      p.e = Math.max(1.3, p.e - 0.2);
+    } else if (grade === 1) {
+      p.r++;
+      p.i = p.i === 0 ? 1 : Math.max(1, Math.round(p.i * 1.3));
+      p.e = Math.max(1.3, p.e - 0.05);
+      p.due = now + p.i * DAY;
+    } else {
+      p.r++;
+      if (p.i === 0) p.i = 1;
+      else if (p.i < 3) p.i = 3;
+      else p.i = Math.round(p.i * p.e);
+      p.e = Math.min(2.8, p.e + 0.05);
+      p.due = now + p.i * DAY;
+    }
+    p.last = now;
+    state.progress[id] = p;
+
+    var k = todayKey();
+    var s = state.stats[k] || { n: 0, rv: 0, ms: 0 };
+    if (before === 0) s.n++;   // 首次接触：计入新学
+    else s.rv++;               // 再次出现：计入复习
+    state.stats[k] = s;
+    save();
+    return p;
+  }
+
+  function addStudyTime(ms) {
+    var k = todayKey();
+    var s = state.stats[k] || { n: 0, rv: 0, ms: 0 };
+    s.ms += ms;
+    state.stats[k] = s;
+  }
+
+  function dueCards(limit) {
+    var now = Date.now();
+    var list = index.cards.filter(function (c) {
+      var p = state.progress[c.id];
+      return p && p.due && p.due <= now;
+    });
+    list.sort(function (a, b) { return state.progress[a.id].due - state.progress[b.id].due; });
+    return limit ? list.slice(0, limit) : list;
+  }
+
+  function newCards(domainId, limit) {
+    var pool = index.cards.filter(function (c) {
+      if (domainId && c.domainId !== domainId) return false;
+      return !state.progress[c.id];
+    });
+    // 按学习路径顺序
+    var order = pathDeckOrder(domainId);
+    pool.sort(function (a, b) {
+      var oa = order.indexOf(a.deckId), ob = order.indexOf(b.deckId);
+      oa = oa < 0 ? 99 : oa; ob = ob < 0 ? 99 : ob;
+      return oa - ob;
+    });
+    return limit ? pool.slice(0, limit) : pool;
+  }
+
+  function pathDeckOrder(domainId) {
+    var out = [];
+    (PATHS[domainId] || []).forEach(function (st) { st.decks.forEach(function (d) { out.push(d); }); });
+    // 不在路径中的 deck 追加在最后
+    index.decks.forEach(function (d) {
+      if (d.domainId === domainId && out.indexOf(d.id) < 0) out.push(d.id);
+    });
+    return out;
+  }
+
+  function todayStat() {
+    return state.stats[todayKey()] || { n: 0, rv: 0, ms: 0 };
+  }
+
+  function streak() {
+    var n = 0;
+    var d = new Date();
+    // 今天没学不算断，从今天往前找
+    for (var i = 0; i < 400; i++) {
+      var k = dayKey(d.getTime());
+      var s = state.stats[k];
+      var active = s && (s.n + s.rv) > 0;
+      if (active) n++;
+      else if (i > 0) break;
+      else if (!active && i === 0) { /* 今天未学，继续看昨天 */ }
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+
+  function masteryDist(domainId) {
+    var dist = [0, 0, 0, 0];
+    index.cards.forEach(function (c) {
+      if (domainId && c.domainId !== domainId) return;
+      dist[mastery(c.id)]++;
+    });
+    return dist;
+  }
+
+  function deckMastery(deckId) {
+    var cards = index.byDeck[deckId] || [];
+    if (!cards.length) return { learned: 0, total: 0, pct: 0, avg: 0 };
+    var learned = 0, sum = 0;
+    cards.forEach(function (c) {
+      var m = mastery(c.id);
+      if (m > 0) learned++;
+      sum += m;
+    });
+    return { learned: learned, total: cards.length, pct: Math.round((learned / cards.length) * 100), avg: sum / cards.length };
+  }
+
+  /* ---------- 自定义卡片 ---------- */
+  function uid(prefix) {
+    return (prefix || "c") + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function addCard(data) {
+    var card = {
+      id: uid("c"), f: data.f, b: data.b || "", t: data.t || "",
+      deckId: data.deckId, domainId: data.domainId, domainName: data.domainName || "我的知识库"
+    };
+    state.custom.push(card);
+    save();
+    buildIndex();
+    return card;
+  }
+
+  function updateCard(id, data) {
+    var c = state.custom.find(function (x) { return x.id === id; });
+    if (!c) return null;
+    c.f = data.f; c.b = data.b || ""; c.t = data.t || "";
+    if (data.deckId) { c.deckId = data.deckId; c.domainId = data.domainId; c.domainName = data.domainName; }
+    save();
+    buildIndex();
+    return c;
+  }
+
+  function deleteCard(id) {
+    state.custom = state.custom.filter(function (x) { return x.id !== id; });
+    delete state.progress[id];
+    save();
+    buildIndex();
+  }
+
+  function addDeck(domainId, name, domainName) {
+    var deck = { id: uid("d"), domainId: domainId, name: name, desc: "", domainName: domainName || "我的知识库" };
+    state.customDecks.push(deck);
+    save();
+    buildIndex();
+    return deck;
+  }
+
+  function deleteDeck(deckId) {
+    state.customDecks = state.customDecks.filter(function (d) { return d.id !== deckId; });
+    var removed = state.custom.filter(function (c) { return c.deckId === deckId; });
+    removed.forEach(function (c) { delete state.progress[c.id]; });
+    state.custom = state.custom.filter(function (c) { return c.deckId !== deckId; });
+    save();
+    buildIndex();
+  }
+
+  function addDomain(name, icon) {
+    var id = uid("dom");
+    state.customDomains.push({ id: id, name: name, icon: icon || "MY" });
+    state.customDecks.push({ id: uid("d"), domainId: id, name: "默认分组", desc: "", domainName: name });
+    save();
+    buildIndex();
+    if (state.settings) state.settings.activeDomain = id;
+    save();
+    return { id: id, name: name, icon: icon || "MY" };
+  }
+
+  function deleteDomain(domainId) {
+    var removed = state.custom.filter(function (c) { return c.domainId === domainId; });
+    removed.forEach(function (c) { delete state.progress[c.id]; });
+    state.custom = state.custom.filter(function (c) { return c.domainId !== domainId; });
+    state.customDecks = state.customDecks.filter(function (d) { return d.domainId !== domainId; });
+    state.customDomains = state.customDomains.filter(function (d) { return d.id !== domainId; });
+    save();
+    buildIndex();
+  }
+
+  /* ---------- 导入导出 ---------- */
+  function exportJSON() {
+    return JSON.stringify({
+      app: "learn-app", version: 1, exportedAt: new Date().toISOString(),
+      settings: state.settings, progress: state.progress, stats: state.stats,
+      customDomains: state.customDomains, customDecks: state.customDecks, custom: state.custom
+    }, null, 2);
+  }
+
+  function exportMarkdown() {
+    var lines = ["# 我的知识库导出", "", "> 导出时间：" + new Date().toLocaleString(), ""];
+    var group = {};
+    state.custom.forEach(function (c) {
+      var deck = (index.decks.find(function (d) { return d.id === c.deckId; }) || {});
+      var title = (c.domainName || "我的知识库") + " / " + (deck.name || "未分组");
+      if (!group[title]) group[title] = [];
+      group[title].push(c);
+    });
+    Object.keys(group).forEach(function (title) {
+      lines.push("## " + title, "");
+      group[title].forEach(function (c) {
+        lines.push("### " + c.f);
+        lines.push(c.b || "");
+        if (c.t) lines.push("> " + c.t);
+        lines.push("");
+      });
+    });
+    return lines.join("\n");
+  }
+
+  // 解析：Markdown（## 分组 / ### 正面 / 正文背面 / > 补充）或 CSV（front,back,tip）
+  function parseImport(text) {
+    var trimmed = (text || "").trim();
+    if (!trimmed) return { decks: [], format: "empty" };
+    if (trimmed[0] === "{" || trimmed[0] === "[") {
+      try {
+        var j = JSON.parse(trimmed);
+        return { format: "json", json: j };
+      } catch (e) { /* 继续当文本处理 */ }
+    }
+    var lines = trimmed.split(/\r?\n/);
+    var decks = [];
+    var cur = null;
+    var mode = null;
+    // 判断是否 CSV/TSV
+    var first = lines[0] || "";
+    var isCSV = /^(front|正面|q|question)?[,;\t]?(back|背面|a|answer)?[,;\t]/i.test(first) || (first.split(/[,;\t]/).length >= 2 && !/^#{1,3}\s/.test(first) && !/^###?\s/.test(first));
+    if (isCSV) {
+      var sep = first.indexOf("\t") >= 0 ? "\t" : (first.indexOf(";") >= 0 ? ";" : ",");
+      var start = 0;
+      if (/front|正面|question/i.test(first.split(sep)[0])) start = 1; // 跳过表头
+      for (var i = start; i < lines.length; i++) {
+        var parts = lines[i].split(sep);
+        if (!parts[0] || !parts[0].trim()) continue;
+        pushCard("导入分组", { f: unq(parts[0]), b: unq(parts[1] || ""), t: unq(parts[2] || "") });
+      }
+      return { format: "csv", decks: decks };
+    }
+    // Markdown
+    for (var j = 0; j < lines.length; j++) {
+      var ln = lines[j];
+      if (/^##\s+/.test(ln)) {
+        cur = { name: ln.replace(/^##\s+/, "").trim(), cards: [] };
+        decks.push(cur);
+        mode = null;
+      } else if (/^###\s+/.test(ln)) {
+        if (!cur) { cur = { name: "导入分组", cards: [] }; decks.push(cur); }
+        mode = { f: ln.replace(/^###\s+/, "").trim(), b: "", t: "" };
+        cur.cards.push(mode);
+      } else if (/^>\s?/.test(ln)) {
+        if (mode) mode.t += (mode.t ? " " : "") + ln.replace(/^>\s?/, "");
+      } else if (ln.trim()) {
+        if (mode) mode.b += (mode.b ? "\n" : "") + ln.trim();
+      }
+    }
+    if (!decks.length) return { format: "unknown", decks: [] };
+    return { format: "markdown", decks: decks };
+
+    function pushCard(name, card) {
+      var d = decks.find(function (x) { return x.name === name; });
+      if (!d) { d = { name: name, cards: [] }; decks.push(d); }
+      d.cards.push(card);
+    }
+    function unq(s) {
+      s = (s || "").trim();
+      if (s.length > 1 && ((s[0] === '"' && s[s.length - 1] === '"') || (s[0] === "'" && s[s.length - 1] === "'"))) s = s.slice(1, -1);
+      return s;
+    }
+  }
+
+  // 把解析结果写入（返回新增数量）
+  function importParsed(parsed, target) {
+    var added = 0, merged = 0;
+    if (parsed.format === "json" && parsed.json) {
+      var j = parsed.json;
+      if (j.custom) state.custom = j.custom.concat(state.custom.filter(function (c) { return !j.custom.some(function (x) { return x.id === c.id; }); }));
+      if (j.customDomains) state.customDomains = j.customDomains.concat(state.customDomains.filter(function (c) { return !j.customDomains.some(function (x) { return x.id === c.id; }); }));
+      if (j.customDecks) state.customDecks = j.customDecks.concat(state.customDecks.filter(function (c) { return !j.customDecks.some(function (x) { return x.id === c.id; }); }));
+      if (j.progress) Object.keys(j.progress).forEach(function (k) { if (!state.progress[k]) state.progress[k] = j.progress[k]; });
+      if (j.stats) Object.keys(j.stats).forEach(function (k) {
+        var a = state.stats[k] || { n: 0, rv: 0, ms: 0 }, b = j.stats[k];
+        state.stats[k] = { n: Math.max(a.n, b.n || 0), rv: Math.max(a.rv, b.rv || 0), ms: Math.max(a.ms, b.ms || 0) };
+      });
+      save(); buildIndex();
+      return { added: (j.custom || []).length, merged: 0 };
+    }
+    var domainId = target.domainId, domainName = target.domainName;
+    parsed.decks.forEach(function (d) {
+      var deck = state.customDecks.find(function (x) { return x.domainId === domainId && x.name === d.name; });
+      if (!deck) deck = addDeck(domainId, d.name, domainName);
+      d.cards.forEach(function (c) {
+        if (!c.f) return;
+        var exist = state.custom.find(function (x) { return x.deckId === deck.id && x.f === c.f; });
+        if (exist) { exist.b = c.b; exist.t = c.t; merged++; }
+        else { state.custom.push({ id: uid("c"), f: c.f, b: c.b || "", t: c.t || "", deckId: deck.id, domainId: domainId, domainName: domainName }); added++; }
+      });
+    });
+    save(); buildIndex();
+    return { added: added, merged: merged };
+  }
+
+  function resetAll() {
+    state = defaultState();
+    save();
+    buildIndex();
+  }
+
+  function resetProgress() {
+    state.progress = {};
+    state.stats = {};
+    save();
+  }
+
+  /* ---------- 搜索 ---------- */
+  function search(q) {
+    q = (q || "").trim().toLowerCase();
+    if (!q) return [];
+    return index.cards.filter(function (c) {
+      return (c.f + " " + c.b + " " + c.t + " " + c.deckName + " " + c.domainName).toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 60);
+  }
+
+  window.Store = {
+    PATHS: PATHS,
+    load: load, save: save,
+    get state() { return state; },
+    get index() { return index; },
+    dayKey: dayKey, todayKey: todayKey,
+    getProgress: getProgress, mastery: mastery, review: review, addStudyTime: addStudyTime,
+    dueCards: dueCards, newCards: newCards, pathDeckOrder: pathDeckOrder,
+    todayStat: todayStat, streak: streak, masteryDist: masteryDist, deckMastery: deckMastery,
+    addCard: addCard, updateCard: updateCard, deleteCard: deleteCard,
+    addDeck: addDeck, deleteDeck: deleteDeck, addDomain: addDomain, deleteDomain: deleteDomain, uid: uid,
+    exportJSON: exportJSON, exportMarkdown: exportMarkdown, parseImport: parseImport, importParsed: importParsed,
+    resetAll: resetAll, resetProgress: resetProgress, search: search
+  };
+})();
+
+</script>
+<script>
+/* 主应用：页面渲染 / 学习会话 / 知识库编辑 / 导入导出 */
+(function () {
+  "use strict";
+  var S = window.Store;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  var PAGE_META = {
+    home: ["学习", "今天也要进步一点点"],
+    path: ["学习路径", "跟着阶段走，不迷路"],
+    lib: ["知识库", "内置 + 自建，随时可改"],
+    stats: ["统计", "看得见的积累"],
+    me: ["我的", "设置与数据"]
+  };
+
+  var curPage = "home";
+  var libState = { domainId: "all", deckId: null, q: "" };
+  var statDomain = "all";
+  var pathDomain = "english";
+  var homeDomain = null; // null 表示跟随 settings.activeDomain
+
+  /* ---------- 工具 ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function toast(msg) {
+    var t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2000);
+  }
+  function pct(a, b) { return b ? Math.round((a / b) * 100) : 0; }
+  function mins(ms) { return Math.max(1, Math.round((ms || 0) / 60000)); }
+  function domainName(id) {
+    var d = S.index.domains.find(function (x) { return x.id === id; });
+    return d ? d.name : "我的知识库";
+  }
+  function accentOf(id) {
+    var d = S.index.domains.find(function (x) { return x.id === id; });
+    return (d && d.accent) || "#F5A524";
+  }
+  function uidOf(prefix) { return S.uid(prefix); }
+
+  /* ---------- 路由 ---------- */
+  function go(page) {
+    curPage = page;
+    ["home", "path", "lib", "stats", "me"].forEach(function (p) {
+      $("#page-" + p).classList.toggle("hidden", p !== page);
+    });
+    $$(".tabbar button").forEach(function (b) { b.classList.toggle("on", b.dataset.page === page); });
+    $("#pageTitle").textContent = PAGE_META[page][0];
+    $("#pageSub").textContent = PAGE_META[page][1];
+    $("#btnSearch").classList.toggle("hidden", page === "me");
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function render() {
+    if (curPage === "home") renderHome();
+    else if (curPage === "path") renderPath();
+    else if (curPage === "lib") renderLib();
+    else if (curPage === "stats") renderStats();
+    else renderMe();
+  }
+
+  /* ---------- 领域 chips ---------- */
+  function domainChips(active, includeAll) {
+    var out = "";
+    if (includeAll) out += '<button class="chip' + (active === "all" ? " on" : "") + '" data-dom="all">全部</button>';
+    S.index.domains.forEach(function (d) {
+      out += '<button class="chip' + (active === d.id ? " on" : "") + '" data-dom="' + esc(d.id) + '">' + esc(d.name) + '</button>';
+    });
+    return '<div class="chips">' + out + "</div>";
+  }
+  function bindChips(root, cb) {
+    $$(".chip[data-dom]", root).forEach(function (b) {
+      b.onclick = function () { cb(b.dataset.dom); };
+    });
+  }
+
+  /* ================= 首页 ================= */
+  function activeHomeDomain() {
+    return homeDomain || S.state.settings.activeDomain || "english";
+  }
+
+  function queueFor(domainId) {
+    var did = domainId === "all" ? null : domainId;
+    var due = S.dueCards(S.state.settings.dailyReview).filter(function (c) { return !did || c.domainId === did; });
+    var fresh = S.newCards(did, S.state.settings.dailyNew);
+    return { due: due, fresh: fresh, all: due.concat(fresh) };
+  }
+
+  function renderHome() {
+    var dom = activeHomeDomain();
+    var q = queueFor(dom);
+    var st = S.todayStat();
+    var streak = S.streak();
+    var goal = S.state.settings.dailyNew;
+    var dist = S.masteryDist(dom === "all" ? null : dom);
+    var total = dist.reduce(function (a, b) { return a + b; }, 0);
+
+    var html = "";
+    html += '<div class="hero">' +
+      '<div class="big">' + greet() + '</div>' +
+      '<div class="goal">' + (dom === "all" ? "全部领域" : esc(domainName(dom))) + ' · 今日目标 ' + goal + ' 张新卡</div>' +
+      '<div class="rings">' +
+      '<div class="ring"><div class="num">' + q.due.length + '</div><div class="lb">待复习</div></div>' +
+      '<div class="ring"><div class="num">' + q.fresh.length + '</div><div class="lb">可新学</div></div>' +
+      '<div class="ring"><div class="num">' + streak + '</div><div class="lb">连续天数</div></div>' +
+      '</div>' +
+      '<div class="mt12"><div class="bar"><i style="width:' + pct(st.n, Math.max(1, goal)) + '%"></i></div>' +
+      '<div class="tiny faint mt8">今日已新学 ' + st.n + ' / ' + goal + ' 张 · 复习 ' + st.rv + ' 张' + (st.ms ? ' · 用时约 ' + mins(st.ms) + ' 分钟' : '') + '</div></div>' +
+      '</div>';
+
+    html += domainChips(dom, true);
+
+    html += '<button class="btn primary wide" id="btnStart"' + (q.all.length ? "" : " disabled") + '>' +
+      (q.all.length ? "开始学习 · " + q.all.length + " 张" : "今日任务已完成 🎉") + '</button>';
+
+    html += '<div class="mt16">';
+    html += taskRow("🔁", "复习到期", q.due.length + " 张待复习", q.due.length ? "review" : null);
+    html += taskRow("✨", "学习新卡", q.fresh.length + " 张可新学（上限 " + goal + "）", q.fresh.length ? "new" : null);
+    html += taskRow("📈", "掌握进度", "已接触 " + (total - dist[0]) + " / " + total + " 张", null);
+    html += "</div>";
+
+    // 推荐分组
+    var decks = S.index.decks.filter(function (d) { return dom === "all" || d.domainId === dom; })
+      .map(function (d) { return { d: d, m: S.deckMastery(d.id) }; })
+      .filter(function (x) { return x.m.learned < x.m.total; })
+      .sort(function (a, b) { return b.m.pct - a.m.pct; }).slice(0, 3);
+    if (decks.length) {
+      html += '<div class="small muted mt16" style="margin-bottom:8px">继续学习</div>';
+      decks.forEach(function (x) {
+        html += '<div class="task" data-deck="' + esc(x.d.id) + '">' +
+          '<div class="t-ic" style="background:color-mix(in srgb,' + accentOf(x.d.domainId) + ' 18%, var(--surface-2))">' + (x.d.builtin ? "📘" : "✍️") + '</div>' +
+          '<div class="grow"><div class="t-title">' + esc(x.d.name) + '</div>' +
+          '<div class="t-sub">' + esc(x.d.domainName) + ' · 已学 ' + x.m.pct + '%</div></div>' +
+          '<div class="bar" style="width:60px"><i style="width:' + x.m.pct + '%"></i></div></div>';
+      });
+    }
+
+    var host = $("#page-home");
+    host.innerHTML = html;
+    bindChips(host, function (id) { homeDomain = id; S.state.settings.activeDomain = id === "all" ? "english" : id; S.save(); renderHome(); });
+    var bs = $("#btnStart", host);
+    if (bs) bs.onclick = function () { startStudy(q.all, "今日学习 · " + (dom === "all" ? "全部" : domainName(dom))); };
+    $$(".task[data-act]", host).forEach(function (b) {
+      b.onclick = function () {
+        var act = b.dataset.act;
+        startStudy(act === "review" ? q.due : q.fresh, act === "review" ? "复习到期" : "学习新卡");
+      };
+    });
+    $$(".task[data-deck]", host).forEach(function (b) {
+      b.onclick = function () { libState.domainId = "all"; libState.deckId = b.dataset.deck; go("lib"); };
+    });
+  }
+
+  function greet() {
+    var h = new Date().getHours();
+    if (h < 6) return "夜深了，学一点就好";
+    if (h < 11) return "早上好，开始今天";
+    if (h < 14) return "中午好，来一轮";
+    if (h < 18) return "下午好，继续推进";
+    return "晚上好，收个尾";
+  }
+
+  function taskRow(em, title, sub, act) {
+    return '<div class="task"' + (act ? ' data-act="' + act + '"' : '') + '>' +
+      '<div class="t-ic">' + em + '</div>' +
+      '<div class="grow"><div class="t-title">' + title + '</div><div class="t-sub">' + sub + '</div></div>' +
+      (act ? '<span class="badge">开始 ›</span>' : '') + '</div>';
+  }
+
+  /* ================= 路径 ================= */
+  function renderPath() {
+    var dom = pathDomain;
+    var stages = S.PATHS[dom] || [];
+    var html = domainChips(dom, false);
+    if (!stages.length) {
+      html += '<div class="empty"><div class="em">🧭</div>这个领域还没有内置学习路径<br><span class="small">可在知识库里自建分组来组织内容</span></div>';
+      var host0 = $("#page-path");
+      host0.innerHTML = html;
+      bindChips(host0, function (id) { pathDomain = id; renderPath(); });
+      return;
+    }
+    var order = S.pathDeckOrder(dom);
+    stages.forEach(function (st, si) {
+      var dm = st.decks.map(function (id) { return S.deckMastery(id); });
+      var learned = dm.reduce(function (a, b) { return a + b.learned; }, 0);
+      var total = dm.reduce(function (a, b) { return a + b.total; }, 0);
+      var p = pct(learned, total);
+      var cards = [];
+      st.decks.forEach(function (id) { cards = cards.concat(S.index.byDeck[id] || []); });
+      var pending = cards.filter(function (c) { var pr = S.getProgress(c.id); return !pr || pr.due <= Date.now(); });
+      html += '<div class="stage' + (p === 100 ? " done" : "") + '">' +
+        '<div class="st-head"><div class="st-name">' + esc(st.name) + '</div>' +
+        '<span class="badge">' + learned + "/" + total + '</span></div>' +
+        '<div class="st-goal">' + esc(st.goal) + '</div>' +
+        '<div class="bar"><i style="width:' + p + '%"></i></div>' +
+        '<div class="decks mt12">' +
+        st.decks.map(function (id) {
+          var d = S.index.decks.find(function (x) { return x.id === id; }) || { name: id };
+          var m = S.deckMastery(id);
+          return '<div class="deck-line" data-deck="' + esc(id) + '">' +
+            '<span class="nm">' + esc(d.name) + '</span>' +
+            '<div class="bar"><i style="width:' + m.pct + '%"></i></div>' +
+            '<span class="pc">' + m.pct + '%</span></div>';
+        }).join("") +
+        '</div>' +
+        '<button class="btn wide mt12" data-study="' + si + '"' + (pending.length ? "" : " disabled") + '>' +
+        (pending.length ? "学习本阶段 · " + pending.length + " 张" : "本阶段已排满复习 ✓") + '</button>' +
+        '</div>';
+    });
+    var host = $("#page-path");
+    host.innerHTML = html;
+    bindChips(host, function (id) { pathDomain = id; renderPath(); });
+    $$("[data-study]", host).forEach(function (b) {
+      b.onclick = function () {
+        var st = stages[+b.dataset.study];
+        var cards = [];
+        st.decks.forEach(function (id) { cards = cards.concat(S.index.byDeck[id] || []); });
+        cards = cards.filter(function (c) { var pr = S.getProgress(c.id); return !pr || pr.due <= Date.now(); });
+        // 复习优先
+        cards.sort(function (a, b2) {
+          var pa = S.getProgress(a.id) ? 1 : 0, pb = S.getProgress(b2.id) ? 1 : 0;
+          return pb - pa;
+        });
+        startStudy(cards, st.name);
+      };
+    });
+    $$("[data-deck]", host).forEach(function (b) {
+      b.onclick = function () { libState.domainId = dom; libState.deckId = b.dataset.deck; go("lib"); };
+    });
+  }
+
+  /* ================= 知识库 ================= */
+  function renderLib() {
+    var host = $("#page-lib");
+    var html = "";
+
+    if (libState.deckId) {
+      var deck = S.index.decks.find(function (d) { return d.id === libState.deckId; });
+      if (!deck) { libState.deckId = null; return renderLib(); }
+      var cards = (S.index.byDeck[deck.id] || []).slice();
+      var m = S.deckMastery(deck.id);
+      html += '<div class="row" style="margin-bottom:10px"><button class="btn ghost" id="btnBack">‹ 返回</button>' +
+        '<div style="flex:1" class="small muted">' + esc(deck.domainName) + ' · ' + cards.length + ' 张 · 已学 ' + m.pct + '%</div></div>';
+      html += '<div class="bar" style="margin-bottom:12px"><i style="width:' + m.pct + '%"></i></div>';
+      html += '<div class="row" style="gap:8px;margin-bottom:12px">' +
+        '<button class="btn" style="flex:1" id="btnStudyDeck">学习本组</button>' +
+        (deck.builtin ? '' : '<button class="btn danger" id="btnDelDeck">删除分组</button>') + '</div>';
+      if (libState.q) cards = cards.filter(function (c) { return (c.f + c.b).toLowerCase().indexOf(libState.q.toLowerCase()) >= 0; });
+      if (!cards.length) html += '<div class="empty"><div class="em">🗂</div>这里还没有卡片</div>';
+      cards.forEach(function (c) {
+        var mv = S.mastery(c.id);
+        var label = ["未学", "学习中", "巩固中", "已掌握"][mv];
+        html += '<div class="kb-card">' +
+          '<div class="between"><div class="row"><span class="dot m' + mv + '"></span><span class="q">' + esc(c.f) + '</span></div>' +
+          '<span class="tiny faint">' + label + (c.builtin ? "" : ' · 自建') + '</span></div>' +
+          (c.b ? '<div class="a">' + esc(c.b) + '</div>' : '') +
+          (c.t ? '<div class="ex">' + esc(c.t) + '</div>' : '') +
+          (c.builtin ? '' : '<div class="row mt12" style="gap:8px;justify-content:flex-end">' +
+            '<button class="btn ghost small" data-edit="' + esc(c.id) + '">编辑</button>' +
+            '<button class="btn ghost small" data-del="' + esc(c.id) + '" style="color:var(--bad)">删除</button></div>') +
+          '</div>';
+      });
+      host.innerHTML = html;
+      $("#btnBack", host).onclick = function () { libState.deckId = null; renderLib(); };
+      $("#btnStudyDeck", host).onclick = function () {
+        var list = (S.index.byDeck[deck.id] || []).filter(function (c) { var p = S.getProgress(c.id); return !p || p.due <= Date.now(); });
+        if (!list.length) list = (S.index.byDeck[deck.id] || []).slice();
+        startStudy(list, deck.name);
+      };
+      var bd = $("#btnDelDeck", host);
+      if (bd) bd.onclick = function () {
+        if (confirm("删除分组「" + deck.name + "」及其所有卡片？")) { S.deleteDeck(deck.id); libState.deckId = null; toast("已删除"); renderLib(); }
+      };
+      $$("[data-edit]", host).forEach(function (b) { b.onclick = function () { openCardEditor(b.dataset.edit); }; });
+      $$("[data-del]", host).forEach(function (b) {
+        b.onclick = function () {
+          if (confirm("删除这张卡片？")) { S.deleteCard(b.dataset.del); toast("已删除"); renderLib(); }
+        };
+      });
+      return;
+    }
+
+    html += '<input class="search" id="kbSearch" placeholder="搜索关键词（正面 / 背面 / 分组）" value="' + esc(libState.q) + '">';
+    html += domainChips(libState.domainId, true);
+
+    if (libState.q.trim()) {
+      var res = S.search(libState.q).filter(function (c) { return libState.domainId === "all" || c.domainId === libState.domainId; });
+      html += '<div class="small muted" style="margin:4px 0 10px">找到 ' + res.length + ' 条</div>';
+      if (!res.length) html += '<div class="empty"><div class="em">🔍</div>没有匹配的卡片</div>';
+      res.forEach(function (c) {
+        html += '<div class="kb-card" data-godeck="' + esc(c.deckId) + '">' +
+          '<div class="between"><span class="q">' + esc(c.f) + '</span><span class="tiny faint">' + esc(c.deckName) + '</span></div>' +
+          '<div class="a">' + esc(c.b) + '</div>' + (c.t ? '<div class="ex">' + esc(c.t) + '</div>' : '') + '</div>';
+      });
+      host.innerHTML = html;
+      bindSearch(host);
+      bindChips(host, function (id) { libState.domainId = id; renderLib(); });
+      $$("[data-godeck]", host).forEach(function (b) { b.onclick = function () { libState.deckId = b.dataset.godeck; libState.q = ""; renderLib(); }; });
+      return;
+    }
+
+    var decks = S.index.decks.filter(function (d) { return libState.domainId === "all" || d.domainId === libState.domainId; });
+    decks.forEach(function (d) {
+      var m = S.deckMastery(d.id);
+      html += '<div class="lib-item" data-deck="' + esc(d.id) + '">' +
+        '<div class="em" style="background:' + accentOf(d.domainId) + '">' + esc((d.name || "?").slice(0, 2)) + '</div>' +
+        '<div class="grow"><div class="nm">' + esc(d.name) + '</div>' +
+        '<div class="ds">' + esc(d.domainName) + ' · ' + m.total + ' 张' + (d.builtin ? "" : " · 自建") + '</div>' +
+        '<div class="bar mt8"><i style="width:' + m.pct + '%"></i></div></div>' +
+        '<div class="tiny muted">' + m.pct + '%</div></div>';
+    });
+    if (!decks.length) html += '<div class="empty"><div class="em">📚</div>还没有分组，点右上角 ＋ 新建</div>';
+
+    host.innerHTML = html;
+    bindSearch(host);
+    bindChips(host, function (id) { libState.domainId = id; renderLib(); });
+    $$("[data-deck]", host).forEach(function (b) { b.onclick = function () { libState.deckId = b.dataset.deck; renderLib(); }; });
+  }
+
+  function bindSearch(host) {
+    var s = $("#kbSearch", host);
+    if (!s) return;
+    s.oninput = function () { libState.q = s.value; renderLib(); var n = $("#kbSearch"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } };
+  }
+
+  /* ================= 统计 ================= */
+  function renderStats() {
+    var did = statDomain === "all" ? null : statDomain;
+    var dist = S.masteryDist(did);
+    var total = dist.reduce(function (a, b) { return a + b; }, 0);
+    var st = S.todayStat();
+    var streak = S.streak();
+    var sumDays = Object.keys(S.state.stats).filter(function (k) { var v = S.state.stats[k]; return (v.n + v.rv) > 0; }).length;
+
+    var html = domainChips(statDomain, true);
+    html += '<div class="grid2">' +
+      '<div class="stat-mini"><div class="n" style="color:var(--gold)">' + streak + '</div><div class="l">连续打卡（天）</div></div>' +
+      '<div class="stat-mini"><div class="n">' + (st.n + st.rv) + '</div><div class="l">今日学习（张）</div></div>' +
+      '<div class="stat-mini"><div class="n">' + sumDays + '</div><div class="l">累计学习（天）</div></div>' +
+      '<div class="stat-mini"><div class="n">' + (total - dist[0]) + '</div><div class="l">已接触（张）</div></div>' +
+      '</div>';
+
+    // 热力图
+    html += '<div class="card mt16"><div class="between"><b>学习热力图</b><span class="tiny faint">近 12 周</span></div>' +
+      '<div class="heat mt12">' + heatCells() + '</div>' +
+      '<div class="legend"><span><b style="background:var(--surface-2)"></b>未学习</span>' +
+      '<span><b style="background:color-mix(in srgb,var(--accent) 30%,var(--surface-2))"></b>少量</span>' +
+      '<span><b style="background:var(--accent)"></b>达标</span>' +
+      '<span><b style="background:var(--accent-2)"></b>超额</span></div></div>';
+
+    // 近 14 天
+    html += '<div class="card"><div class="between"><b>近 14 天学习量</b><span class="tiny faint">张 / 天</span></div>' +
+      '<div class="chart">' + bars14() + '</div></div>';
+
+    // 掌握度
+    var labels = ["未学习", "学习中", "巩固中", "已掌握"];
+    var colors = ["var(--faint)", "var(--bad)", "var(--warn)", "var(--ok)"];
+    html += '<div class="card"><div class="between"><b>掌握度分布</b><span class="tiny faint">共 ' + total + ' 张</span></div>' +
+      '<div class="mt12" style="display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface-2)">' +
+      dist.map(function (n, i) { return '<i style="width:' + pct(n, total) + '%;background:' + colors[i] + '"></i>'; }).join("") +
+      '</div><div class="legend">' +
+      dist.map(function (n, i) { return '<span><b style="background:' + colors[i] + '"></b>' + labels[i] + ' ' + n + '</span>'; }).join("") +
+      '</div></div>';
+
+    // 分组掌握度
+    var decks = S.index.decks.filter(function (d) { return !did || d.domainId === did; })
+      .map(function (d) { return { d: d, m: S.deckMastery(d.id) }; })
+      .sort(function (a, b) { return b.m.pct - a.m.pct; });
+    if (decks.length) {
+      html += '<div class="card"><b>分组掌握度</b><div class="mt12">' +
+        decks.map(function (x) {
+          return '<div class="deck-line" style="margin-bottom:9px"><span class="nm">' + esc(x.d.name) + '</span>' +
+            '<div class="bar" style="flex:1"><i style="width:' + x.m.pct + '%"></i></div>' +
+            '<span class="pc">' + x.m.pct + '%</span></div>';
+        }).join("") + '</div></div>';
+    }
+
+    var host = $("#page-stats");
+    host.innerHTML = html;
+    bindChips(host, function (id) { statDomain = id; renderStats(); });
+  }
+
+  function heatCells() {
+    var out = "";
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var start = new Date(today);
+    start.setDate(start.getDate() - (today.getDay() + 77)); // 回到 11 周前的周日
+    var d = new Date(start);
+    for (var i = 0; i < 84; i++) {
+      var k = S.dayKey(d.getTime());
+      var v = S.state.stats[k];
+      var n = v ? (v.n + v.rv) : 0;
+      var lv = n === 0 ? 0 : n < 5 ? 1 : n < 15 ? 2 : n < 30 ? 3 : 4;
+      var future = d > today;
+      out += '<i class="' + (lv ? "l" + lv : "") + '" title="' + k + " · " + n + ' 张"' +
+        (future ? ' style="opacity:.3"' : '') + '></i>';
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
+  function bars14() {
+    var out = "";
+    var d = new Date();
+    for (var i = 13; i >= 0; i--) {
+      var dd = new Date(); dd.setDate(d.getDate() - i);
+      var k = S.dayKey(dd.getTime());
+      var v = S.state.stats[k];
+      var n = v ? (v.n + v.rv) : 0;
+      var max = 1;
+      for (var j = 0; j < 14; j++) {
+        var t2 = new Date(); t2.setDate(d.getDate() - j);
+        var v2 = S.state.stats[S.dayKey(t2.getTime())];
+        if (v2) max = Math.max(max, v2.n + v2.rv);
+      }
+      out += '<div class="col" title="' + k + " · " + n + '"><i style="height:' + Math.max(3, Math.round((n / max) * 84)) + 'px"></i>' +
+        '<span>' + (dd.getMonth() + 1) + "/" + dd.getDate() + '</span></div>';
+    }
+    return out;
+  }
+
+  /* ================= 我的 ================= */
+  function renderMe() {
+    var s = S.state.settings;
+    var myCards = S.state.custom.length;
+    var html = "";
+
+    html += '<div class="card"><b>每日目标</b>' +
+      '<div class="list-row"><div><div>每日新卡上限</div><div class="tiny faint">建议 8-15 张，贪多容易断</div></div>' +
+      '<div class="stepper"><button data-step="new:-5">−</button><span class="v">' + s.dailyNew + '</span><button data-step="new:5">＋</button></div></div>' +
+      '<div class="list-row"><div><div>每日复习上限</div><div class="tiny faint">到期卡很多时的熔断线</div></div>' +
+      '<div class="stepper"><button data-step="rev:-10">−</button><span class="v">' + s.dailyReview + '</span><button data-step="rev:10">＋</button></div></div>' +
+      '</div>';
+
+    html += '<div class="card"><b>外观</b><div class="seg mt12">' +
+      '<button data-theme="dark" class="' + (s.theme === "dark" ? "on" : "") + '">深色</button>' +
+      '<button data-theme="light" class="' + (s.theme === "light" ? "on" : "") + '">浅色</button>' +
+      '</div></div>';
+
+    html += '<div class="card"><b>数据</b>' +
+      '<div class="small muted mt8">自建卡片 ' + myCards + ' 张 · 学习记录 ' + Object.keys(S.state.progress).length + ' 条</div>' +
+      '<div class="grid2 mt12" style="gap:8px">' +
+      '<button class="btn" id="expJson">导出 JSON</button>' +
+      '<button class="btn" id="expMd">导出 Markdown</button>' +
+      '<button class="btn" id="impBtn">导入文件</button>' +
+      '<button class="btn" id="impDemo">看导入格式</button>' +
+      '</div>' +
+      '<div class="grid2 mt12" style="gap:8px">' +
+      '<button class="btn danger" id="resetProg">重置学习进度</button>' +
+      '<button class="btn danger" id="resetAll">清空全部数据</button>' +
+      '</div></div>';
+
+    html += '<div class="card"><b>关于</b>' +
+      '<div class="small muted mt8">这是一个完全本地运行的学习工具：数据存在你的手机浏览器里，不上传任何服务器。</div>' +
+      '<div class="small muted mt8">复习节奏基于间隔重复（SM-2 简化版）：标记「掌握」的卡片会按 1 → 3 → 7 → 17 天左右的间隔逐步拉长，标记「忘记」则会回到短间隔重新巩固。</div>' +
+      '<div class="small muted mt8">提示：在浏览器菜单选择「添加到主屏幕」，即可像 App 一样使用。</div>' +
+      '</div>';
+
+    var host = $("#page-me");
+    host.innerHTML = html;
+    $$("[data-step]", host).forEach(function (b) {
+      b.onclick = function () {
+        var p = b.dataset.step.split(":");
+        var key = p[0] === "new" ? "dailyNew" : "dailyReview";
+        var v = S.state.settings[key] + parseInt(p[1], 10);
+        S.state.settings[key] = Math.min(p[0] === "new" ? 60 : 300, Math.max(p[0] === "new" ? 5 : 20, v));
+        S.save(); renderMe();
+      };
+    });
+    $$("[data-theme]", host).forEach(function (b) {
+      b.onclick = function () { setTheme(b.dataset.theme); renderMe(); };
+    });
+    $("#expJson", host).onclick = function () { download("learn-app-备份-" + S.todayKey() + ".json", S.exportJSON(), "application/json"); };
+    $("#expMd", host).onclick = function () { download("我的知识库-" + S.todayKey() + ".md", S.exportMarkdown(), "text/markdown"); };
+    $("#impBtn", host).onclick = function () { $("#fileInput").click(); };
+    $("#impDemo", host).onclick = showImportFormat;
+    $("#resetProg", host).onclick = function () {
+      if (confirm("重置所有卡片的学习进度？知识库内容会保留。")) { S.resetProgress(); toast("已重置进度"); renderMe(); }
+    };
+    $("#resetAll", host).onclick = function () {
+      if (confirm("清空全部数据（含自建卡片与记录）？此操作不可恢复。")) { S.resetAll(); toast("已清空"); go("home"); }
+    };
+  }
+
+  function setTheme(t) {
+    S.state.settings.theme = t;
+    document.documentElement.dataset.theme = t;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", t === "dark" ? "#0E1116" : "#F4F6FA");
+    S.save();
+  }
+
+  function download(name, text, type) {
+    var blob = new Blob([text], { type: type + ";charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    toast("已导出 " + name);
+  }
+
+  /* ================= 学习会话 ================= */
+  var sess = null;
+
+  function startStudy(list, title) {
+    if (!list || !list.length) { toast("没有可学习的卡片"); return; }
+    sess = { queue: list.slice(), i: 0, flipped: false, title: title, start: Date.now(), done: [], again: 0 };
+    renderStudy();
+  }
+
+  function renderStudy() {
+    var root = $("#studyRoot");
+    if (!sess) { root.innerHTML = ""; return; }
+    if (sess.i >= sess.queue.length) return renderStudyDone();
+
+    var c = sess.queue[sess.i];
+    var left = sess.queue.length - sess.i;
+    var prog = pct(sess.i, sess.queue.length);
+    var mv = S.mastery(c.id);
+    var label = ["未学", "学习中", "巩固中", "已掌握"][mv];
+
+    root.innerHTML =
+      '<div class="study">' +
+      '<div class="study-top">' +
+      '<button class="iconbtn" id="sClose">✕</button>' +
+      '<div class="bar"><i style="width:' + prog + '%"></i></div>' +
+      '<div class="stage-pill">' + left + ' 张</div>' +
+      '</div>' +
+      '<div class="tiny faint" style="margin-bottom:8px">' + esc(sess.title) + ' · ' + esc(c.deckName) + ' · <span style="color:' + ["var(--faint)", "var(--bad)", "var(--warn)", "var(--ok)"][mv] + '">' + label + '</span></div>' +
+      '<div class="flipwrap"><div class="flip" id="flip"><div class="flip-inner">' +
+      '<div class="face"><div class="label">Question</div><div class="front-text">' + esc(c.f) + '</div>' +
+      '<div class="tap-hint">点击卡片查看答案</div></div>' +
+      '<div class="face back"><div class="label">Answer</div><div class="back-text">' + esc(c.b || "（暂无内容）") + '</div>' +
+      (c.t ? '<div class="ex-text">' + esc(c.t) + '</div>' : '') +
+      '<div class="tap-hint">还记得起来吗？</div></div>' +
+      '</div></div></div>' +
+      '<div class="grades' + (sess.flipped ? "" : " hide") + '">' +
+      '<button class="grade g0" data-g="0"><span class="g-em">😵</span>忘记<small>10 分钟后再来</small></button>' +
+      '<button class="grade g1" data-g="1"><span class="g-em">🤔</span>模糊<small>间隔小幅延长</small></button>' +
+      '<button class="grade g2" data-g="2"><span class="g-em">✅</span>掌握<small>间隔明显拉长</small></button>' +
+      '</div>' +
+      '</div>';
+
+    $("#sClose", root).onclick = closeStudy;
+    var flip = $("#flip", root);
+    flip.onclick = function () {
+      sess.flipped = !sess.flipped;
+      flip.classList.toggle("show", sess.flipped);
+      flip.parentNode.parentNode.querySelector(".grades").classList.toggle("hide", !sess.flipped);
+    };
+    $$(".grade", root).forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        grade(+b.dataset.g);
+      };
+    });
+  }
+
+  function grade(g) {
+    var c = sess.queue[sess.i];
+    var before = S.mastery(c.id);
+    S.review(c.id, g);
+    sess.done.push({ id: c.id, g: g, isNew: before === 0 });
+    if (g === 0) {
+      // 忘记的卡片在本轮末尾再出现一次
+      var already = sess.queue.indexOf(c);
+      if (sess.repeat !== c.id) { sess.queue.push(c); sess.repeat = c.id; }
+      void already;
+    }
+    sess.i++;
+    sess.flipped = false;
+    renderStudy();
+  }
+
+  function renderStudyDone() {
+    var root = $("#studyRoot");
+    var n = sess.done.filter(function (x) { return x.isNew; }).length;
+    var rv = sess.done.length - n;
+    var forgot = sess.done.filter(function (x) { return x.g === 0; }).length;
+    var ms = Date.now() - sess.start;
+    S.addStudyTime(ms);
+    root.innerHTML =
+      '<div class="study"><div class="done-wrap">' +
+      '<div class="done-em">' + (forgot > 3 ? "💪" : "🎉") + '</div>' +
+      '<h2>这一轮完成</h2>' +
+      '<div class="small muted">' + esc(sess.title) + '</div>' +
+      '<div class="done-stats">' +
+      '<div class="stat-mini"><div class="n">' + n + '</div><div class="l">新学</div></div>' +
+      '<div class="stat-mini"><div class="n">' + rv + '</div><div class="l">复习</div></div>' +
+      '<div class="stat-mini"><div class="n" style="color:var(--bad)">' + forgot + '</div><div class="l">忘记</div></div>' +
+      '</div>' +
+      '<div class="small faint">用时约 ' + mins(ms) + ' 分钟</div>' +
+      '<div style="width:100%;display:grid;gap:10px;margin-top:18px">' +
+      (forgot ? '<button class="btn primary wide" id="againBtn">再练一次忘记的 ' + Math.min(forgot, 20) + ' 张</button>' : '') +
+      '<button class="btn wide" id="finishBtn">完成，回到首页</button>' +
+      '</div></div></div>';
+    $("#finishBtn", root).onclick = function () { sess = null; root.innerHTML = ""; go("home"); };
+    var ab = $("#againBtn", root);
+    if (ab) ab.onclick = function () {
+      var ids = sess.done.filter(function (x) { return x.g === 0; }).map(function (x) { return x.id; }).slice(0, 20);
+      var list = ids.map(function (id) { return S.index.byId[id]; }).filter(Boolean);
+      sess = null;
+      startStudy(list, "巩固忘记的卡片");
+    };
+  }
+
+  function closeStudy() {
+    if (sess) S.addStudyTime(Date.now() - sess.start);
+    sess = null;
+    $("#studyRoot").innerHTML = "";
+    render();
+  }
+
+  /* ================= 弹层 ================= */
+  function openSheet(html) {
+    var root = $("#sheetRoot");
+    root.innerHTML = '<div class="sheet-mask"><div class="sheet">' + html + '</div></div>';
+    $(".sheet-mask", root).onclick = function (e) { if (e.target === this) closeSheet(); };
+  }
+  function closeSheet() { $("#sheetRoot").innerHTML = ""; }
+
+  function openCardEditor(cardId) {
+    var card = cardId ? S.index.byId[cardId] : null;
+    var curDeck = card ? card.deckId : (libState.deckId || null);
+    var curDomain = card ? card.domainId : (libState.domainId !== "all" ? libState.domainId : S.index.domains[0].id);
+
+    function deckOptions(dom) {
+      var out = S.index.decks.filter(function (d) { return d.domainId === dom; })
+        .map(function (d) { return '<option value="' + esc(d.id) + '"' + (d.id === curDeck ? " selected" : "") + '>' + esc(d.name) + '</option>'; }).join("");
+      return out + '<option value="__new__">＋ 新建分组…</option>';
+    }
+    var domainOptions = S.index.domains.map(function (d) {
+      return '<option value="' + esc(d.id) + '"' + (d.id === curDomain ? " selected" : "") + '>' + esc(d.name) + '</option>';
+    }).join("") + '<option value="__new__">＋ 新建领域…</option>';
+
+    openSheet(
+      '<h3>' + (card ? "编辑卡片" : "新增卡片") + '</h3>' +
+      '<div class="field"><label>正面（问题 / 词语）</label><textarea id="fFront" placeholder="例如：什么是北极星指标">' + esc(card ? card.f : "") + '</textarea></div>' +
+      '<div class="field"><label>背面（答案 / 释义）</label><textarea id="fBack" placeholder="要点、判断标准、用法">' + esc(card ? card.b : "") + '</textarea></div>' +
+      '<div class="field"><label>补充（例句 / 例子，可留空）</label><input id="fTip" value="' + esc(card ? card.t : "") + '" placeholder="例如：Day-30 retention is our north-star metric."></div>' +
+      '<div class="field"><label>领域</label><select id="fDomain">' + domainOptions + '</select></div>' +
+      '<div class="field hidden" id="wrapNewDomain"><label>新领域名称</label><input id="fNewDomain" placeholder="例如：数据分析"></div>' +
+      '<div class="field"><label>分组</label><select id="fDeck">' + deckOptions(curDomain) + '</select></div>' +
+      '<div class="field hidden" id="wrapNewDeck"><label>新分组名称</label><input id="fNewDeck" placeholder="例如：SQL 高频考点"></div>' +
+      '<div class="row" style="gap:10px;margin-top:14px">' +
+      '<button class="btn" style="flex:1" id="btnCancel">取消</button>' +
+      '<button class="btn primary" style="flex:2" id="btnSave">保存</button></div>' +
+      '<div class="tiny faint center mt12">提示：纯文本即可，支持换行；一次写一张卡，学习时记得最牢。</div>'
+    );
+
+    var root = $("#sheetRoot");
+    $("#fDomain", root).onchange = function () {
+      var v = this.value;
+      $("#wrapNewDomain", root).classList.toggle("hidden", v !== "__new__");
+      var sel = $("#fDeck", root);
+      curDeck = null;
+      sel.innerHTML = deckOptions(v === "__new__" ? "__none__" : v);
+      $("#wrapNewDeck", root).classList.toggle("hidden", sel.value !== "__new__");
+    };
+    $("#fDeck", root).onchange = function () {
+      $("#wrapNewDeck", root).classList.toggle("hidden", this.value !== "__new__");
+    };
+    $("#btnCancel", root).onclick = closeSheet;
+    $("#btnSave", root).onclick = function () {
+      var f = $("#fFront", root).value.trim();
+      var b = $("#fBack", root).value.trim();
+      var t = $("#fTip", root).value.trim();
+      if (!f) { toast("正面不能为空"); return; }
+      var domSel = $("#fDomain", root).value;
+      var domId, domName, deckId;
+      if (domSel === "__new__") {
+        domName = $("#fNewDomain", root).value.trim() || "我的知识库";
+        domId = S.addDomain(domName).id;
+        var ndName = $("#fNewDeck", root).value.trim();
+        deckId = ndName
+          ? S.addDeck(domId, ndName, domName).id
+          : (S.index.decks.find(function (d) { return d.domainId === domId; }) || {}).id;
+      } else {
+        domId = domSel;
+        domName = domainName(domId);
+        var deckSel = $("#fDeck", root).value;
+        deckId = deckSel === "__new__"
+          ? S.addDeck(domId, $("#fNewDeck", root).value.trim() || "新分组", domName).id
+          : deckSel;
+      }
+      if (!deckId) { toast("请先选择分组"); return; }
+      if (card) S.updateCard(card.id, { f: f, b: b, t: t, deckId: deckId, domainId: domId, domainName: domName });
+      else S.addCard({ f: f, b: b, t: t, deckId: deckId, domainId: domId, domainName: domName });
+      closeSheet();
+      toast(card ? "已保存" : "已添加");
+      render();
+    };
+    setTimeout(function () { var f = $("#fFront", root); if (f && !card) f.focus(); }, 60);
+  }
+
+  function showImportFormat() {
+    openSheet(
+      '<h3>支持的导入格式</h3>' +
+      '<div class="small muted"><b>1. Markdown（推荐）</b></div>' +
+      '<pre class="small" style="background:var(--surface);padding:10px;border-radius:10px;overflow:auto;font-size:12px">## 分组名称\n### 正面（问题）\n背面内容，可多行\n> 补充例句（可选）\n\n### 另一个问题\n答案</pre>' +
+      '<div class="small muted mt12"><b>2. CSV / TSV</b></div>' +
+      '<pre class="small" style="background:var(--surface);padding:10px;border-radius:10px;overflow:auto;font-size:12px">front,back,tip\n什么是MVP,用最小成本验证关键假设,人工后台+付费按钮</pre>' +
+      '<div class="small muted mt12"><b>3. JSON</b></div>' +
+      '<div class="small muted">本应用导出的备份文件，可直接导入并恢复进度与自建卡片。</div>' +
+      '<button class="btn primary wide mt16" id="okFmt">知道了</button>'
+    );
+    $("#okFmt").onclick = closeSheet;
+  }
+
+  function handleFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      var text = String(r.result || "");
+      var parsed = S.parseImport(text);
+      if (!parsed.decks || !parsed.decks.length) { toast("没能识别出可导入的内容"); return showImportFormat(); }
+      var count = parsed.decks.reduce(function (a, d) { return a + d.cards.length; }, 0);
+      // 目标领域
+      var customDomain = S.index.domains.find(function (d) { return !d.builtin; });
+      var targetId = customDomain ? customDomain.id : null;
+      var opts = S.index.domains.map(function (d) {
+        return '<option value="' + esc(d.id) + '"' + (d.id === targetId ? " selected" : "") + '>' + esc(d.name) + '</option>';
+      }).join("");
+      openSheet(
+        '<h3>导入预览</h3>' +
+        '<div class="small muted">识别为 <b>' + parsed.format + '</b> 格式，共 ' + parsed.decks.length + ' 个分组、' + count + ' 张卡片。</div>' +
+        '<div style="max-height:180px;overflow:auto;margin:12px 0">' +
+        parsed.decks.map(function (d) {
+          return '<div class="small" style="margin-bottom:8px"><b>' + esc(d.name) + '</b>' +
+            d.cards.slice(0, 3).map(function (c) { return '<div class="tiny faint">· ' + esc(c.f) + '</div>'; }).join("") +
+            (d.cards.length > 3 ? '<div class="tiny faint">… 等 ' + d.cards.length + ' 张</div>' : '') + '</div>';
+        }).join("") + '</div>' +
+        '<div class="field"><label>导入到</label><select id="impTarget">' + opts + '</select></div>' +
+        '<div class="row" style="gap:10px"><button class="btn" style="flex:1" id="impCancel">取消</button>' +
+        '<button class="btn primary" style="flex:2" id="impOk">确认导入</button></div>'
+      );
+      $("#impCancel").onclick = closeSheet;
+      $("#impOk").onclick = function () {
+        var id = $("#impTarget").value;
+        var d = S.index.domains.find(function (x) { return x.id === id; });
+        var res = S.importParsed(parsed, { domainId: id, domainName: d ? d.name : "我的知识库" });
+        closeSheet();
+        toast("导入完成：新增 " + res.added + " 张" + (res.merged ? "，更新 " + res.merged + " 张" : ""));
+        render();
+      };
+    };
+    r.readAsText(file, "utf-8");
+  }
+
+  /* ================= 初始化 ================= */
+  function init() {
+    S.load();
+    setTheme(S.state.settings.theme || "dark");
+    $$(".tabbar button").forEach(function (b) { b.onclick = function () { go(b.dataset.page); }; });
+    $("#btnAdd").onclick = function () { openCardEditor(null); };
+    $("#btnSearch").onclick = function () {
+      if (curPage === "lib") { var s = $("#kbSearch"); if (s) { s.focus(); return; } }
+      libState.q = "";
+      go("lib");
+      setTimeout(function () { var s2 = $("#kbSearch"); if (s2) s2.focus(); }, 80);
+    };
+    $("#fileInput").onchange = function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f) handleFile(f);
+      e.target.value = "";
+    };
+    go("home");
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+</script>
+</body>
+</html>
